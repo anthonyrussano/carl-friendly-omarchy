@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+failures=0
+warnings=0
+
+pass() { printf 'PASS  %s\n' "$1"; }
+warn() { printf 'WARN  %s\n' "$1"; warnings=$((warnings + 1)); }
+fail() { printf 'FAIL  %s\n' "$1"; failures=$((failures + 1)); }
+check_command() { command -v "$1" >/dev/null && pass "$2" || fail "$2 (missing $1)"; }
+check_file() { [[ -e "$1" ]] && pass "$2" || fail "$2 (missing $1)"; }
+
+printf 'Little O system check\n\n'
+check_command omarchy 'Omarchy command'
+check_command omarchy-shell 'Omarchy Shell command'
+check_command chromium 'Draw/music activity runtime'
+check_command gcompris-qt 'GCompris learning activities'
+check_command nautilus 'My Things file browser'
+check_command hermes 'Hermes helper'
+check_file "$HOME/.config/omarchy/plugins/little-o.home/manifest.json" 'Home plugin installed'
+check_file "$HOME/.config/omarchy/themes/little-o/colors.toml" 'Little O theme installed'
+check_file "$HOME/.local/bin/little-o-launch" 'Activity launcher installed'
+check_file "$HOME/.local/share/little-o/little-o-playroom.html" 'Local activity pack installed'
+check_file "$HOME/.config/omarchy/hooks/post-boot.d/little-o-home" 'Login home hook installed'
+check_file "$HOME/.local/share/little-o/omabook/build/omabook" 'OmaBook built'
+check_file "$HOME/.hermes/hermes-agent/apps/desktop/release/linux-unpacked/Hermes" 'Hermes Desktop built'
+
+if omarchy plugin validate "$HOME/.config/omarchy/plugins/little-o.home" >/dev/null 2>&1; then
+  pass 'Home plugin validates'
+else
+  fail 'Home plugin validation'
+fi
+
+if bash -n "$HOME/.local/bin/little-o-launch"; then pass 'Launcher syntax'; else fail 'Launcher syntax'; fi
+for mode in draw letters numbers music; do
+  if chromium --headless --disable-gpu --no-sandbox --disable-extensions --dump-dom \
+    "file://$HOME/.local/share/little-o/little-o-playroom.html?mode=$mode" 2>/dev/null | grep -q 'Little O Playroom'; then
+    pass "Local $mode activity starts"
+  else
+    fail "Local $mode activity startup"
+  fi
+done
+
+activities="$(QT_QPA_PLATFORM=offscreen gcompris-qt --list-activities 2>/dev/null || true)"
+grep -qx 'click_on_letter' <<<"$activities" && pass 'GCompris letter activity present' || fail 'GCompris letter activity missing'
+grep -qx 'learn_digits' <<<"$activities" && pass 'GCompris number activity present' || fail 'GCompris number activity missing'
+
+if ldd "$HOME/.local/share/little-o/omabook/build/omabook" 2>/dev/null | grep -q 'not found'; then
+  fail 'OmaBook has missing libraries'
+else
+  pass 'OmaBook runtime libraries'
+fi
+
+if command -v spd-say >/dev/null; then pass 'OmaBook offline read-aloud backend'; else warn 'Install speech-dispatcher to enable offline story narration'; fi
+
+model="$(hermes config get model.default 2>/dev/null || true)"
+provider="$(hermes config get model.provider 2>/dev/null || true)"
+[[ "$provider" == 'anthropic' && "$model" == *sonnet* ]] && pass 'Hermes set to Claude Sonnet' || warn "Hermes model is ${provider:-unset}/${model:-unset}"
+
+if "$HOME/.hermes/hermes-agent/venv/bin/python" -c 'import faster_whisper, sounddevice' >/dev/null 2>&1; then
+  pass 'Hermes local speech recognition dependencies'
+else
+  fail 'Hermes local speech recognition dependencies'
+fi
+
+for folder in "$HOME/Books/Carl" "$HOME/Music/Carl" "$HOME/Pictures/Carl"; do
+  [[ -d "$folder" ]] && pass "Content folder $folder" || fail "Content folder $folder"
+done
+
+printf '\nResult: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
+(( failures == 0 ))

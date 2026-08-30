@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "little-o.home",
+  "name": "Little O Home",
+  "version": "0.1.0",
+  "author": "Anthony and Carl",
+  "description": "A large, visual home screen for young children on Omarchy.",
+  "kinds": ["overlay", "bar-widget"],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "Home.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Little O Home",
+    "description": "Return to Carl's visual home screen",
+    "category": "Launcher",
+    "allowMultiple": false,
+    "defaultSection": "left"
+  }
+}

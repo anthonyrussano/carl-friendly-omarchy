@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+action="${1:-home}"
+
+notify_coming_soon() {
+  notify-send -a "Little O" "$1" "This activity is coming soon."
+}
+
+playroom="$HOME/.local/share/little-o/little-o-playroom.html"
+
+return_home() {
+  omarchy-shell shell summon little-o.home '{}' >/dev/null 2>&1 || true
+}
+
+run_and_return() {
+  set +e
+  uwsm-app -- "$@"
+  local status=$?
+  set -e
+  return_home
+  return "$status"
+}
+
+launch_playroom() {
+  local mode="$1"
+  mkdir -p "$HOME/.local/share/little-o/chromium-profile"
+  run_and_return chromium \
+    --user-data-dir="$HOME/.local/share/little-o/chromium-profile" \
+    --app="file://${playroom}?mode=${mode}" \
+    --start-maximized --no-first-run --no-default-browser-check \
+    --disable-background-networking --disable-component-update --disable-sync \
+    --disable-extensions --disable-vulkan \
+    --disable-features=Translate \
+    --download-default-directory="$HOME/Pictures/Carl"
+}
+
+case "$action" in
+  home)
+    omarchy-shell shell summon little-o.home '{}'
+    ;;
+  draw)
+    if command -v tuxpaint >/dev/null 2>&1; then
+      run_and_return tuxpaint --fullscreen --nosysfonts
+    else
+      launch_playroom draw
+    fi
+    ;;
+  letters|numbers)
+    if command -v gcompris-qt >/dev/null 2>&1; then
+      if [[ "$action" == "letters" ]]; then
+        run_and_return gcompris-qt --launch click_on_letter --difficulty 1-2 --fullscreen --sound --disable-kioskmode
+      else
+        run_and_return gcompris-qt --launch learn_digits --difficulty 1-2 --fullscreen --sound --disable-kioskmode
+      fi
+    else
+      launch_playroom "$action"
+    fi
+    ;;
+  stories)
+    mkdir -p "$HOME/Books/Carl"
+    if [[ -x "$HOME/.local/share/little-o/omabook/build/omabook" ]]; then
+      run_and_return "$HOME/.local/share/little-o/omabook/build/omabook"
+    else
+      notify-send -a "Little O" "Stories unavailable" "OmaBook needs to be rebuilt."
+    fi
+    ;;
+  music)
+    mkdir -p "$HOME/Music/Carl"
+    launch_playroom music
+    ;;
+  my-things)
+    mkdir -p "$HOME/Pictures/Carl"
+    run_and_return nautilus --new-window "$HOME/Pictures/Carl"
+    ;;
+  helper)
+    hermes_app="$HOME/.hermes/hermes-agent/apps/desktop/release/linux-unpacked/Hermes"
+    if [[ -x "$hermes_app" ]]; then
+      cd "$HOME"
+      # The locally built Electron sandbox helper needs a one-time root-owned
+      # permission fix. Keep the child-facing button usable until Dad applies it.
+      if [[ -u "$HOME/.hermes/hermes-agent/apps/desktop/release/linux-unpacked/chrome-sandbox" ]]; then
+        run_and_return "$hermes_app" --ozone-platform=wayland
+      else
+        run_and_return "$hermes_app" --no-sandbox --ozone-platform=wayland
+      fi
+    elif command -v hermes >/dev/null 2>&1; then
+      run_and_return hermes desktop --cwd "$HOME"
+    else
+      notify-send -a "Little O" "Helper unavailable" "Hermes is not available yet."
+    fi
+    ;;
+  volume)
+    omarchy-shell shell toggle omarchy.audio '{}'
+    ;;
+  grown-ups)
+    omarchy-shell shell summon omarchy.menu '{"menu":"root"}'
+    ;;
+  *)
+    notify-send -a "Little O" "Unknown activity" "$action"
+    exit 2
+    ;;
+esac

@@ -1,0 +1,13 @@
+# Local captures and personal test evidence
+private/
+screenshots/private/
+*.local
+
+# Generated/deployed artifacts
+build/
+dist/
+
+# Editor and cache files
+.DS_Store
+*~
+*.swp

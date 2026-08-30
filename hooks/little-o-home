@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -u
+
+# post-boot already runs after a two-second Omarchy delay. Retry briefly as a
+# guard against slower shell startup on older hardware.
+for _attempt in {1..10}; do
+  if omarchy-shell shell summon little-o.home '{}' >/dev/null 2>&1; then
+    exit 0
+  fi
+  sleep 1
+done
+
+notify-send -a "Little O" "Home needs help" "Use the Home button in the top bar."
+exit 1

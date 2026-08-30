@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+stamp="$(date +%Y%m%d-%H%M%S)"
+backup="$HOME/.local/state/little-o/backups/$stamp"
+
+for command in omarchy omarchy-shell chromium nautilus; do
+  command -v "$command" >/dev/null || { printf 'Missing required command: %s\n' "$command" >&2; exit 1; }
+done
+
+mkdir -p "$backup" "$HOME/.config/omarchy/plugins" "$HOME/.config/omarchy/themes" \
+  "$HOME/.local/bin" "$HOME/.local/share/little-o" "$HOME/Books/Carl" \
+  "$HOME/Music/Carl" "$HOME/Pictures/Carl"
+
+for path in \
+  "$HOME/.config/omarchy/shell.json" \
+  "$HOME/.config/omarchy/plugins/little-o.home" \
+  "$HOME/.config/omarchy/themes/little-o" \
+  "$HOME/.config/gcompris/gcompris-qt.conf" \
+  "$HOME/.local/bin/little-o-launch" \
+  "$HOME/.local/share/little-o/little-o-playroom.html"; do
+  if [[ -e "$path" ]]; then cp -a "$path" "$backup/"; fi
+done
+
+mkdir -p "$HOME/.config/omarchy/plugins/little-o.home" "$HOME/.config/omarchy/themes/little-o"
+cp -a "$root/src/little-o.home/." "$HOME/.config/omarchy/plugins/little-o.home/"
+cp -a "$root/theme/little-o/." "$HOME/.config/omarchy/themes/little-o/"
+cp "$root/bin/little-o-launch" "$HOME/.local/bin/little-o-launch"
+cp "$root/apps/little-o-playroom.html" "$HOME/.local/share/little-o/little-o-playroom.html"
+cp "$root/config/shell.json" "$HOME/.config/omarchy/shell.json"
+mkdir -p "$HOME/.config/gcompris"
+sed "s|@HOME@|$HOME|g" "$root/config/gcompris-qt.conf.in" > "$HOME/.config/gcompris/gcompris-qt.conf"
+chmod +x "$HOME/.local/bin/little-o-launch"
+
+omarchy plugin validate "$HOME/.config/omarchy/plugins/little-o.home"
+omarchy hook install post-boot "$root/hooks/little-o-home"
+omarchy theme set "Little O"
+omarchy-shell shell rescanPlugins || omarchy restart shell
+
+printf 'Little O installed. Backup: %s\n' "$backup"
+printf 'Run %s/bin/doctor to verify the installation.\n' "$root"

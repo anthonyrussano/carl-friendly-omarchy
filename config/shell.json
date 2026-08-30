@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "idle": {
+    "screensaver": 900,
+    "lock": 2147483
+  },
+  "bar": {
+    "position": "top",
+    "transparent": true,
+    "centerAnchor": "omarchy.clock",
+    "layout": {
+      "left": [],
+      "center": [
+        { "id": "little-o.home" },
+        {
+          "id": "omarchy.clock",
+          "format": "HH:mm",
+          "formatAlt": "d MMMM 'W'ww yyyy",
+          "verticalFormat": "HH\n—\nmm"
+        }
+      ],
+      "right": [{ "id": "omarchy.audio" }]
+    }
+  },
+  "plugins": []
+}
