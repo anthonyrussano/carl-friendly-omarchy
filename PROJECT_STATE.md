@@ -46,6 +46,7 @@ Functional beta installed; parent credential completion and supervised child usa
 - Built Hermes Desktop. Installed and verified Faster Whisper with its local `tiny` model, microphone access, and Edge TTS; the synthesized phrase “Hi Carl. Your helper voice is ready.” round-tripped through speech recognition exactly.
 - Added a Carl-aware Hermes persona: short spoken guidance for Carl, adult-level responses for Anthony, and explicit confirmation for purchases, disclosure, deletion, external contact, or security changes.
 - Added idempotent install, OmaBook update, consolidated privileged setup, diagnostic, and recoverable uninstall commands plus dependency/testing documentation and an MIT license.
+- Verified the complete shell lifecycle with synthetic keyboard input: launch dismisses the overlay, the activity maps, and closing it automatically restores Home. A post-boot Omarchy hook summons Home after login.
 - Current `bin/doctor` result: zero failures and one warning. The warning clears after `bin/finish-system-setup` installs Speech Dispatcher.
 
 ## Next recommended session

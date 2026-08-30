@@ -12,6 +12,7 @@ Last run: 2026-08-30 on Omarchy 4.0.1-1, 1920×1080.
 - OmaBook imports the starter EPUB into its owner-only SQLite library.
 - The upstream OmaBook test suite passes 178 tests with zero failures and one fixture-dependent skip.
 - GCompris exposes both selected activities: `click_on_letter` and `learn_digits`.
+- End-to-end keyboard test: Enter on the selected tile dismissed the Home layer and mapped the Draw window; closing Draw summoned Home again.
 - Hermes Desktop packages successfully for Linux.
 - Hermes can see the system microphone through PipeWire.
 - Local Faster Whisper transcribed a synthesized test phrase exactly.
