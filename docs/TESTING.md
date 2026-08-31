@@ -27,7 +27,7 @@ Run `bin/doctor` for the current machine state.
 ## Manual checks still required
 
 - Confirm OmaBook's **Read page** control produces audio through the desired output.
-- Renew Anthropic authentication, then use **Talk to Helper** and confirm one complete spoken turn without clicking Hermes's voice control.
+- With xAI OAuth logged in, use **Talk to Helper** and confirm one complete spoken turn without clicking Hermes's voice control.
 - Open the audio panel, change between built-in and USB inputs, and confirm no click activates a Home control behind the panel.
 - Observe Carl launching and returning from each activity with his actual input device.
 - Check saved drawing location and preferred music-file selection flow with Carl.
@@ -35,4 +35,4 @@ Run `bin/doctor` for the current machine state.
 
 ## Acceptance rule
 
-Do not call the helper fully operational merely because its window launches. A live voice turn requires all four stages to pass: microphone capture, transcription, Claude response, and spoken playback.
+Do not call the helper fully operational merely because its window launches. A live voice turn requires all four stages to pass: microphone capture, transcription, Grok response, and spoken playback.

@@ -8,7 +8,7 @@ This guide recreates the reference implementation without copying personal data 
 - Arch packages/applications: Chromium, Nautilus, GCompris Qt, `speech-dispatcher`, PipeWire/WirePlumber, `wtype`, `jq`, Git, Make, a C/C++ toolchain, Qt 6 development/runtime libraries, and Node/npm for the Hermes desktop build
 - Rough reference hardware: x86-64 Intel i3, 8 GiB RAM, integrated graphics. Allow swap and use Faster Whisper `tiny` on low-end hardware.
 - Network access during installation for packages, source checkouts, model download, Edge TTS, and the configured AI provider
-- An Anthropic account/API credential for Claude responses. Never commit it.
+- An xAI account authorized through Hermes's device OAuth flow. Never commit credentials.
 
 ## 1. Install the project shell
 
@@ -39,8 +39,8 @@ For Stories, clone `https://github.com/newx/omabook` branch `main-with-ai-featur
 Install Hermes Agent separately so `hermes` is on `PATH`, build/install its desktop application, then configure:
 
 ```text
-model.provider = anthropic
-model.default = claude-sonnet-5
+model.provider = xai-oauth
+model.default = grok-4.6
 stt.enabled = true
 stt.provider = local
 stt.model = tiny
@@ -56,11 +56,11 @@ voice.client_direct = true
 Install `faster-whisper` and `sounddevice` in Hermes's own virtual environment and let it download/warm the `tiny` model. Authenticate interactively:
 
 ```bash
-hermes auth add anthropic --type oauth
+hermes auth add xai-oauth
 hermes doctor
 ```
 
-An Anthropic subscription and an Anthropic API key are not necessarily interchangeable. A 401 `invalid x-api-key` means the stored provider credential is invalid—not that the microphone, STT, or TTS failed.
+Confirm that `hermes doctor` reports xAI OAuth logged in. Authentication failures are independent of microphone, STT, and TTS health.
 
 Run `bin/finish-system-setup` after the desktop build so Electron's `chrome-sandbox` is owned by root with mode 4755. The launcher uses a compatibility fallback until that is true.
 
@@ -76,7 +76,7 @@ Then perform a supervised manual pass:
 
 1. Open the speaker panel, select each input, and verify the chosen source has `*` in `wpctl status`. Confirm no click reaches the home tiles behind the panel.
 2. Select **Talk to Helper**. Hermes should open/focus and voice conversation should start without another click.
-3. Speak a short phrase and confirm transcription, a Claude response, and spoken output.
+3. Speak a short phrase and confirm transcription, a Grok response, and spoken output.
 4. Launch and close all six activities; Home should return after each closes.
 5. Restart the session and confirm the child Home appears from the post-boot hook.
 

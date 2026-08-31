@@ -4,7 +4,7 @@ Last updated: 2026-08-30
 
 ## Stage
 
-Functional beta installed; Anthropic credential renewal and supervised child usability testing are next.
+Functional beta installed; a complete supervised Grok voice turn and child usability testing are next.
 
 ## Machine baseline
 
@@ -35,7 +35,7 @@ Functional beta installed; Anthropic credential renewal and supervised child usa
 - Simplified the child bar to Home, time, and audio. Backup: `~/.config/omarchy/shell.json.bak.little-o-20260830`.
 - Added `~/.local/bin/little-o-launch` with fixed activity routing. Tux Paint/GCompris launch automatically when installed; unfinished activities show a gentle notification.
 - Captured and visually compared the live 1920×1080 implementation. See `design-qa.md`; final result passed.
-- Verified Hermes Agent `0.20.6`. It is configured for Anthropic `claude-sonnet-5`, but `hermes doctor` reports the stored Anthropic API credential as invalid. Re-authentication through `hermes model` is still required.
+- Verified Hermes Agent `0.20.6`. It is configured for `xai-oauth` with `grok-4.6`; Hermes reports xAI OAuth logged in.
 
 ## Production-hardening update — 2026-08-30
 
@@ -52,14 +52,14 @@ Functional beta installed; Anthropic credential renewal and supervised child usa
 - Diagnosed the USB microphone: PipeWire sees `onn USB Microphone Mono` and has it selected as the default input. Omarchy's stock audio plugin already supports input switching.
 - Fixed pointer click-through by moving the full-screen child home from the Wayland `Overlay` layer to `Top`; Omarchy overlay panels such as audio now own input while open.
 - Changed Talk to Helper into a one-action flow: it waits for the Hermes window, focuses it, sends Hermes's `Ctrl+B` voice shortcut, and returns Home when Hermes closes.
-- Extended `bin/doctor` to report the default microphone, required one-tap voice tooling, and invalid Anthropic authentication without exposing secrets.
+- Extended `bin/doctor` to report the default microphone, required one-tap voice tooling, active Grok model, and xAI OAuth state without exposing secrets.
 
 ## Next recommended session
 
 Run the first supervised usability pass:
 
-1. Remove or replace the rejected Anthropic credential, preferably with `hermes auth add anthropic --type oauth`, and keep Claude Sonnet selected.
-2. Run `bin/doctor` and verify Hermes authentication no longer fails.
+1. Use **Talk to Helper** and verify a complete Grok voice turn: capture, transcription, response, and playback.
+2. Optionally remove the two inactive Anthropic credentials from Hermes after confirming they are no longer wanted.
 3. Ask Carl to launch all six tiles and return Home; note misses, hesitations, accidental launches, and whether he recognizes the pictures.
 4. Add DRM-free books to `~/Books/Carl` and music to `~/Music/Carl`, then import the book folder in OmaBook.
 5. Confirm inactivity behavior and plan the `anthony` administrator account migration.

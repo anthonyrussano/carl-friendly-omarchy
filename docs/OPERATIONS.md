@@ -28,14 +28,15 @@ The diagnostic does not print API keys. It checks local components, the active m
 ```bash
 cd ~/Projects/carl-friendly-omarchy
 bin/finish-system-setup
-hermes auth add anthropic --type oauth
+hermes auth add xai-oauth
 ```
 
-The first command needs Anthony's administrator password. The second opens Anthropic's authentication flow. If API-key authentication is preferred, use `hermes auth add anthropic --type api-key`; Hermes prompts securely. Do not put either password or token in this repository.
+The first command needs Anthony's administrator password. The second starts xAI's device OAuth flow. Do not put either password or token in this repository.
 
-If `hermes auth list` shows an old invalid credential, remove it only after the replacement succeeds:
+After xAI passes `hermes doctor`, inactive Anthropic credentials can be removed individually if they are no longer wanted:
 
 ```bash
+hermes auth list
 hermes auth remove anthropic 1
 hermes doctor
 ```

@@ -60,15 +60,15 @@ default_source="$(wpctl status 2>/dev/null | sed -n '/Sources:/,/Source endpoint
 
 model="$(hermes config get model.default 2>/dev/null || true)"
 provider="$(hermes config get model.provider 2>/dev/null || true)"
-[[ "$provider" == 'anthropic' && "$model" == *sonnet* ]] && pass 'Hermes set to Claude Sonnet' || warn "Hermes model is ${provider:-unset}/${model:-unset}"
+[[ "$provider" == 'xai-oauth' && "$model" == grok-* ]] && pass 'Hermes set to xAI Grok OAuth' || warn "Hermes model is ${provider:-unset}/${model:-unset}"
 
 auth_report="$(hermes doctor 2>&1 || true)"
-if grep -qiE 'Anthropic API.*(invalid|failed)|invalid x-api-key' <<<"$auth_report"; then
-  fail 'Hermes Anthropic credential is invalid; run: hermes auth add anthropic --type oauth'
-elif grep -qiE 'Anthropic API.*(ok|valid|pass|success)' <<<"$auth_report"; then
-  pass 'Hermes Anthropic credential'
+if [[ "$provider" == 'xai-oauth' ]] && grep -qi 'xAI OAuth (logged in)' <<<"$auth_report"; then
+  pass 'Hermes xAI OAuth credential'
+elif [[ "$provider" == 'xai-oauth' ]]; then
+  fail 'Hermes xAI OAuth is not logged in; run: hermes auth add xai-oauth'
 else
-  warn 'Hermes credential could not be verified automatically'
+  warn 'Hermes active-provider credential was not checked by Little O'
 fi
 
 if "$HOME/.hermes/hermes-agent/venv/bin/python" -c 'import faster_whisper, sounddevice' >/dev/null 2>&1; then

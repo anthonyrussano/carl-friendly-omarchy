@@ -55,7 +55,7 @@ The activity launcher is intentionally fixed-command routing rather than arbitra
 - **Stories** opens the locally built OmaBook AI branch. `~/Books/Carl` contains a public-domain starter EPUB.
 - **Music** opens the bundled music picker/player for files in `~/Music/Carl`.
 - **My Things** opens `~/Pictures/Carl` in Nautilus.
-- **Talk to Helper** opens the built Hermes Desktop, focuses it, and automatically invokes its `Ctrl+B` voice-conversation action. Local speech recognition and Edge speech output keep the laptop workload modest.
+- **Talk to Helper** opens the built Hermes Desktop, focuses it, and automatically invokes its `Ctrl+B` voice-conversation action. Local speech recognition, xAI Grok OAuth, and Edge speech output keep the laptop workflow simple.
 
 Closing an activity summons the Little O home again.
 
@@ -111,9 +111,9 @@ Source stays in this repository; installed copies live only in user-owned paths 
 
 The included *Tale of Peter Rabbit* test book comes from [Project Gutenberg](https://www.gutenberg.org/ebooks/14838), which marks it public domain in the United States. It is test content, not part of the distributable project source.
 
-## Known credential step
+## AI provider
 
-Hermes is configured for Anthropic Claude Sonnet, but the currently stored `ANTHROPIC_TOKEN` is rejected with HTTP 401 `invalid x-api-key`. Anthony must renew it with `hermes auth add anthropic --type oauth` (recommended) or add a valid Anthropic API key before live AI answers work. Local microphone transcription and spoken output have been tested independently and work.
+Hermes is configured for `xai-oauth` with `grok-4.6`; OAuth and local microphone/speech components pass the system check. Provider credentials live only under Hermes's private configuration and are never copied into this repository. Claude consumer credentials were deliberately not chosen for the third-party harness because Anthropic documents consumer-plan access and API/application access as separate products.
 
 ## Proposed name for the public project
 
