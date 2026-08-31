@@ -17,6 +17,8 @@ check_command chromium 'Draw/music activity runtime'
 check_command gcompris-qt 'GCompris learning activities'
 check_command nautilus 'My Things file browser'
 check_command hermes 'Hermes helper'
+check_command wpctl 'PipeWire audio control'
+check_command wtype 'Wayland keyboard automation for one-tap voice'
 check_file "$HOME/.config/omarchy/plugins/little-o.home/manifest.json" 'Home plugin installed'
 check_file "$HOME/.config/omarchy/themes/little-o/colors.toml" 'Little O theme installed'
 check_file "$HOME/.local/bin/little-o-launch" 'Activity launcher installed'
@@ -53,9 +55,21 @@ fi
 
 if command -v spd-say >/dev/null; then pass 'OmaBook offline read-aloud backend'; else warn 'Install speech-dispatcher to enable offline story narration'; fi
 
+default_source="$(wpctl status 2>/dev/null | sed -n '/Sources:/,/Source endpoints:/p' | sed -n 's/.*\*[^0-9]*[0-9][0-9]*\. \(.*\) \[vol:.*/\1/p' | head -n1)"
+[[ -n "$default_source" ]] && pass "Default microphone: $default_source" || warn 'No default microphone detected'
+
 model="$(hermes config get model.default 2>/dev/null || true)"
 provider="$(hermes config get model.provider 2>/dev/null || true)"
 [[ "$provider" == 'anthropic' && "$model" == *sonnet* ]] && pass 'Hermes set to Claude Sonnet' || warn "Hermes model is ${provider:-unset}/${model:-unset}"
+
+auth_report="$(hermes doctor 2>&1 || true)"
+if grep -qiE 'Anthropic API.*(invalid|failed)|invalid x-api-key' <<<"$auth_report"; then
+  fail 'Hermes Anthropic credential is invalid; run: hermes auth add anthropic --type oauth'
+elif grep -qiE 'Anthropic API.*(ok|valid|pass|success)' <<<"$auth_report"; then
+  pass 'Hermes Anthropic credential'
+else
+  warn 'Hermes credential could not be verified automatically'
+fi
 
 if "$HOME/.hermes/hermes-agent/venv/bin/python" -c 'import faster_whisper, sounddevice' >/dev/null 2>&1; then
   pass 'Hermes local speech recognition dependencies'

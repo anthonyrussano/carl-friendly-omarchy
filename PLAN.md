@@ -33,7 +33,7 @@ Carl can log in and independently choose a small set of safe activities from a l
 
 - A locked-down security boundary against a determined user.
 - Replacing Hyprland, Omarchy Shell, or the whole login/session stack.
-- Cloud accounts, social features, generative chat, surveillance, or detailed behavioral analytics.
+- Social features, surveillance, or detailed behavioral analytics. The parent-approved, supervised Hermes voice helper is an explicit exception to the original cloud/generative-chat non-goal.
 - Installing a large collection of unreviewed themes/plugins.
 - Building a full educational curriculum before navigation is validated with Carl.
 
@@ -66,6 +66,7 @@ Checkpoint: Carl completes 4 of 5 launch-and-return attempts without verbal navi
 - [x] Simplify the bar for child mode and provide an obvious Home control.
 - [ ] Add only necessary Hyprland overrides, preserving an emergency parent shortcut.
 - [x] Validate the plugin with `omarchy plugin validate`; no Hyprland configuration override was needed.
+- [x] Place Home on Wayland `Top` so Omarchy overlay panels receive pointer input without click-through.
 
 Checkpoint: child and parent modes switch reliably; a broken plugin cannot strand the adult outside the normal desktop.
 
@@ -94,6 +95,7 @@ Checkpoint: every activity works offline after installation, exits back Home, an
 - [ ] Observe several short sessions; revise based on behavior rather than preference alone.
 - [ ] Run a parent escape/recovery drill.
 - [x] Record privacy, dependency, license, provenance, and third-party revision details for the current stack.
+- [x] Add one-action Hermes voice startup and automated checks for microphone selection, STT dependencies, and provider authentication.
 
 Checkpoint: five consecutive child sessions without adult recovery; parent recovery works after forced activity and shell crashes.
 

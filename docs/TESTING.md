@@ -17,13 +17,18 @@ Last run: 2026-08-30 on Omarchy 4.0.1-1, 1920×1080.
 - Hermes can see the system microphone through PipeWire.
 - Local Faster Whisper transcribed a synthesized test phrase exactly.
 - Edge TTS synthesized an MP3 using the configured voice.
+- Speech Dispatcher is installed and the packaged Hermes sandbox has the required root ownership and setuid mode.
+- PipeWire detected `onn USB Microphone Mono` and selected it as the default input.
+- The home surface now uses Wayland `Top`, leaving the higher Omarchy audio overlay as the exclusive pointer target.
+- The launcher waits for the Hermes window, focuses it, and sends its documented `Ctrl+B` voice shortcut.
 
 Run `bin/doctor` for the current machine state.
 
 ## Manual checks still required
 
-- Enter the administrator password in `bin/finish-system-setup`, then confirm OmaBook's **Read page** control produces audio.
-- Re-authenticate Anthropic with `hermes model`, then start voice chat with the microphone button or `Ctrl+B` and confirm one complete spoken turn.
+- Confirm OmaBook's **Read page** control produces audio through the desired output.
+- Renew Anthropic authentication, then use **Talk to Helper** and confirm one complete spoken turn without clicking Hermes's voice control.
+- Open the audio panel, change between built-in and USB inputs, and confirm no click activates a Home control behind the panel.
 - Observe Carl launching and returning from each activity with his actual input device.
 - Check saved drawing location and preferred music-file selection flow with Carl.
 - Repeat after reboot and after an Omarchy upgrade.

@@ -4,7 +4,7 @@ Last updated: 2026-08-30
 
 ## Stage
 
-Functional beta installed; parent credential completion and supervised child usability testing are next.
+Functional beta installed; Anthropic credential renewal and supervised child usability testing are next.
 
 ## Machine baseline
 
@@ -16,6 +16,7 @@ Functional beta installed; parent credential completion and supervised child usa
 - User-installed Omarchy shell plugin: `little-o.home`.
 - Live Hyprland session confirmed at 1920×1080.
 - Child bar contains only Home, clock, and audio. Screensaver is 900 seconds; lock remains effectively disabled until separate parent/child accounts are designed.
+- Hardware: Intel Core i3-1115G4 (2 cores/4 threads), 7.5 GiB RAM and 14 GiB swap. Hermes therefore uses Faster Whisper `tiny`; Voxtype is not installed and would duplicate the current STT path.
 
 ## Work completed
 
@@ -47,14 +48,18 @@ Functional beta installed; parent credential completion and supervised child usa
 - Added a Carl-aware Hermes persona: short spoken guidance for Carl, adult-level responses for Anthony, and explicit confirmation for purchases, disclosure, deletion, external contact, or security changes.
 - Added idempotent install, OmaBook update, consolidated privileged setup, diagnostic, and recoverable uninstall commands plus dependency/testing documentation and an MIT license.
 - Verified the complete shell lifecycle with synthetic keyboard input: launch dismisses the overlay, the activity maps, and closing it automatically restores Home. A post-boot Omarchy hook summons Home after login.
-- Current `bin/doctor` result: zero failures and one warning. The warning clears after `bin/finish-system-setup` installs Speech Dispatcher.
+- Completed `bin/finish-system-setup`: Speech Dispatcher is installed and Hermes Electron sandbox ownership/mode are correct (`root:root`, `4755`).
+- Diagnosed the USB microphone: PipeWire sees `onn USB Microphone Mono` and has it selected as the default input. Omarchy's stock audio plugin already supports input switching.
+- Fixed pointer click-through by moving the full-screen child home from the Wayland `Overlay` layer to `Top`; Omarchy overlay panels such as audio now own input while open.
+- Changed Talk to Helper into a one-action flow: it waits for the Hermes window, focuses it, sends Hermes's `Ctrl+B` voice shortcut, and returns Home when Hermes closes.
+- Extended `bin/doctor` to report the default microphone, required one-tap voice tooling, and invalid Anthropic authentication without exposing secrets.
 
 ## Next recommended session
 
 Run the first supervised usability pass:
 
-1. Complete the already-open **Little O — Finish Setup** terminal password prompt, or later run `bin/finish-system-setup`.
-2. Run `hermes model`, choose Anthropic, authenticate, and keep Claude Sonnet selected.
+1. Remove or replace the rejected Anthropic credential, preferably with `hermes auth add anthropic --type oauth`, and keep Claude Sonnet selected.
+2. Run `bin/doctor` and verify Hermes authentication no longer fails.
 3. Ask Carl to launch all six tiles and return Home; note misses, hesitations, accidental launches, and whether he recognizes the pictures.
 4. Add DRM-free books to `~/Books/Carl` and music to `~/Music/Carl`, then import the book folder in OmaBook.
 5. Confirm inactivity behavior and plan the `anthony` administrator account migration.

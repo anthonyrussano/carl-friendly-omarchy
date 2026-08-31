@@ -47,7 +47,9 @@ Item {
     anchors { top: true; bottom: true; left: true; right: true }
     color: "#f5e7d0"
     WlrLayershell.namespace: "little-o-home"
-    WlrLayershell.layer: WlrLayer.Overlay
+    // Keep the child home above ordinary windows, but below Omarchy's overlay
+    // panels. This ensures the audio flyout exclusively owns pointer input.
+    WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
 

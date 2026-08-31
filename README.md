@@ -13,6 +13,7 @@ Start with:
 - [`PLAN.md`](PLAN.md) — scope, phases, acceptance checks, and backlog
 - [`PROJECT_STATE.md`](PROJECT_STATE.md) — the handoff point for future agent sessions
 - [`docs/DESIGN.md`](docs/DESIGN.md) — child-centered interaction model
+- [`docs/REPRODUCE.md`](docs/REPRODUCE.md) — complete clean-machine reproduction guide
 - [`research/OMARCHY_ECOSYSTEM.md`](research/OMARCHY_ECOSYSTEM.md) — local inventory and community review
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to work safely and prepare this for community sharing
 
@@ -44,7 +45,7 @@ Do not edit `/usr/share/omarchy/`. It is packaged, read-only project input and w
 - Arrow keys: move the selected activity.
 - Enter or Space: open the selected activity.
 - Escape or **Grown-ups**: leave child home and open the stock Omarchy menu.
-- **Talk to Helper**: launch Hermes Desktop.
+- **Talk to Helper**: open Hermes Desktop and automatically start a voice conversation.
 
 The activity launcher is intentionally fixed-command routing rather than arbitrary menu shell strings:
 
@@ -54,7 +55,7 @@ The activity launcher is intentionally fixed-command routing rather than arbitra
 - **Stories** opens the locally built OmaBook AI branch. `~/Books/Carl` contains a public-domain starter EPUB.
 - **Music** opens the bundled music picker/player for files in `~/Music/Carl`.
 - **My Things** opens `~/Pictures/Carl` in Nautilus.
-- **Talk to Helper** opens the built Hermes Desktop with local speech recognition and Edge speech output.
+- **Talk to Helper** opens the built Hermes Desktop, focuses it, and automatically invokes its `Ctrl+B` voice-conversation action. Local speech recognition and Edge speech output keep the laptop workload modest.
 
 Closing an activity summons the Little O home again.
 
@@ -69,13 +70,13 @@ bin/doctor
 
 `bin/install` is repeatable and creates timestamped backups under `~/.local/state/little-o/backups/`. `bin/doctor` is read-only and reports missing components without printing credentials.
 
-The two remaining system-level operations use one visible administrator prompt:
+The system-level setup uses one visible administrator prompt:
 
 ```bash
 bin/finish-system-setup
 ```
 
-That installs the offline speech backend for OmaBook and gives Electron's sandbox helper its required root-owned permissions. Until it is run, Talk to Helper uses Electron's `--no-sandbox` compatibility fallback.
+That installs the offline speech backend for OmaBook and gives Electron's sandbox helper its required root-owned permissions. It has been completed on the reference laptop; Talk to Helper retains an automatic `--no-sandbox` compatibility fallback for incomplete installations.
 
 To refresh the experimental OmaBook branch and rebuild it:
 
@@ -112,7 +113,7 @@ The included *Tale of Peter Rabbit* test book comes from [Project Gutenberg](htt
 
 ## Known credential step
 
-Hermes is configured for Anthropic Claude Sonnet, but the currently stored Anthropic token is rejected by the provider. Anthony must run `hermes model` and authenticate with a valid Anthropic credential before live AI answers work. Local microphone transcription and spoken output have been tested independently and work.
+Hermes is configured for Anthropic Claude Sonnet, but the currently stored `ANTHROPIC_TOKEN` is rejected with HTTP 401 `invalid x-api-key`. Anthony must renew it with `hermes auth add anthropic --type oauth` (recommended) or add a valid Anthropic API key before live AI answers work. Local microphone transcription and spoken output have been tested independently and work.
 
 ## Proposed name for the public project
 

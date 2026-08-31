@@ -4,7 +4,9 @@
 
 The Home icon in the top bar summons Carl's activity screen. Closing an activity returns there automatically. **Grown-ups** opens the stock Omarchy menu.
 
-Hermes voice chat starts from the microphone control in its composer or with `Ctrl+B`. Say “stop” to end a voice conversation.
+**Talk to Helper** now opens/focuses Hermes and starts voice chat automatically. Say “stop” to end a voice conversation. `Ctrl+B` remains the manual start/stop shortcut.
+
+The top-right speaker opens Omarchy's audio panel. Choose an item under **Input** to change microphones; `wpctl status` shows the selected source with `*`. The Little O home intentionally uses the Wayland `Top` layer so the audio overlay receives all clicks while open.
 
 ## Add content
 
@@ -19,17 +21,24 @@ cd ~/Projects/carl-friendly-omarchy
 bin/doctor
 ```
 
-The diagnostic does not print API keys. A healthy credential-independent installation reports zero failures. Provider connectivity is checked separately with `hermes doctor`.
+The diagnostic does not print API keys. It checks local components, the active microphone, and summarizes Hermes's provider check without revealing the credential.
 
 ## Credential and system completion
 
 ```bash
 cd ~/Projects/carl-friendly-omarchy
 bin/finish-system-setup
-hermes model
+hermes auth add anthropic --type oauth
 ```
 
-The first command needs Anthony's administrator password. The second needs a valid Anthropic credential. Do not put either password or token in this repository.
+The first command needs Anthony's administrator password. The second opens Anthropic's authentication flow. If API-key authentication is preferred, use `hermes auth add anthropic --type api-key`; Hermes prompts securely. Do not put either password or token in this repository.
+
+If `hermes auth list` shows an old invalid credential, remove it only after the replacement succeeds:
+
+```bash
+hermes auth remove anthropic 1
+hermes doctor
+```
 
 ## Update
 

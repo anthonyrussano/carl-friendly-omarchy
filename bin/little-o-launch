@@ -22,6 +22,29 @@ run_and_return() {
   return "$status"
 }
 
+hermes_window_present() {
+  hyprctl clients 2>/dev/null | grep -q 'class: Hermes'
+}
+
+focus_hermes_and_start_voice() {
+  local tries=0
+  while (( tries < 60 )); do
+    if hermes_window_present; then
+      # Hermes registers Ctrl+B as Start/Stop Voice Conversation. Give its
+      # renderer one additional moment after the window maps on slower PCs.
+      hyprctl dispatch focuswindow 'class:^(Hermes)$' >/dev/null 2>&1 || true
+      sleep 2
+      wtype -M ctrl -k b -m ctrl
+      notify-send -a "Little O" "Helper is listening" "Start talking to Hermes."
+      return 0
+    fi
+    sleep 0.5
+    tries=$((tries + 1))
+  done
+  notify-send -a "Little O" "Helper did not open" "Ask Dad to run the Little O system check."
+  return 1
+}
+
 launch_playroom() {
   local mode="$1"
   mkdir -p "$HOME/.local/share/little-o/chromium-profile"
@@ -80,12 +103,19 @@ case "$action" in
       # The locally built Electron sandbox helper needs a one-time root-owned
       # permission fix. Keep the child-facing button usable until Dad applies it.
       if [[ -u "$HOME/.hermes/hermes-agent/apps/desktop/release/linux-unpacked/chrome-sandbox" ]]; then
-        run_and_return "$hermes_app" --ozone-platform=wayland
+        uwsm-app -- "$hermes_app" --ozone-platform=wayland >/dev/null 2>&1 &
       else
-        run_and_return "$hermes_app" --no-sandbox --ozone-platform=wayland
+        uwsm-app -- "$hermes_app" --no-sandbox --ozone-platform=wayland >/dev/null 2>&1 &
       fi
+      focus_hermes_and_start_voice || true
+      # Preserve the appliance-like flow: when Hermes closes, return to Home.
+      while hermes_window_present; do sleep 1; done
+      return_home
     elif command -v hermes >/dev/null 2>&1; then
-      run_and_return hermes desktop --cwd "$HOME"
+      hermes desktop --cwd "$HOME" >/dev/null 2>&1 &
+      focus_hermes_and_start_voice || true
+      while hermes_window_present; do sleep 1; done
+      return_home
     else
       notify-send -a "Little O" "Helper unavailable" "Hermes is not available yet."
     fi

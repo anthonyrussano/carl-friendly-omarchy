@@ -8,6 +8,9 @@
 | Chromium | Bundled local Draw and Music activities | Host package; local `file:` content, no application telemetry |
 | GCompris 26.1 | Letters and Numbers | Arch `extra/gcompris-qt`; GPL educational suite |
 | Nautilus | My Things | Host file manager |
+| PipeWire/WirePlumber (`wpctl`) | Audio routing and input selection | Host Omarchy audio stack |
+| `wtype` and `hyprctl` | Focus Hermes and invoke voice in one action | Host Omarchy/Wayland tools |
+| `speech-dispatcher` | Lightweight offline story narration | Arch package |
 
 ## Stories
 
@@ -26,3 +29,5 @@ Hermes Agent 0.20.6 is installed separately under `~/.hermes`. Little O does not
 - Anthropic Claude Sonnet for reasoning once the parent supplies a valid credential.
 
 Hermes data, conversations, credentials, and models remain outside this repository. `bin/uninstall` deliberately preserves them.
+
+Voxtype is not installed on the reference machine. It is useful for general desktop dictation, but not required for Hermes voice conversation; running a second always-on recognizer adds memory/CPU use and microphone contention on this 2-core/4-thread laptop. Revisit it only if system-wide dictation becomes a separate requirement.
