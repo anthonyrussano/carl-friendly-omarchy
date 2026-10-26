@@ -1,21 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source_dir="$HOME/.local/share/little-o/omabook"
-branch="main-with-ai-features"
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-if [[ ! -d "$source_dir/.git" ]]; then
-  mkdir -p "$(dirname "$source_dir")"
-  git clone --depth 1 --branch "$branch" https://github.com/newx/omabook.git "$source_dir"
-fi
-
-git -C "$source_dir" fetch --depth 1 origin "$branch"
-git -C "$source_dir" checkout "$branch"
-git -C "$source_dir" reset --keep "origin/$branch"
-
-if [[ ! -f "$source_dir/assets/reader/foliate-js/view.js" ]]; then
-  git clone --depth 1 https://github.com/johnfactotum/foliate-js.git "$source_dir/assets/reader/foliate-js"
-fi
-
-"$source_dir/bin/build"
-printf 'OmaBook updated and built at %s/build/omabook\n' "$source_dir"
+printf 'OmaBook updates are reviewed as main-repository submodule changes.\n'
+printf 'Installing the currently pinned release instead.\n\n'
+exec "$root/bin/install-omabook"

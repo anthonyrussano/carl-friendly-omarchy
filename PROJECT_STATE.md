@@ -1,22 +1,26 @@
 # Project State
 
-Last updated: 2026-08-30
+Last updated: 2026-10-26
 
 ## Stage
 
-Functional beta installed; a complete supervised Grok voice turn and child usability testing are next.
+Functional, offline-first beta installed. The AI helper is intentionally out of child mode; supervised child usability testing is next.
 
 ## Machine baseline
 
-- Omarchy: `4.0.1-1`
+- Omarchy: `4.0.6-1`
+- Hyprland: `0.56.2`
 - Active theme: `Little O`
 - Font: `JetBrainsMono Nerd Font`
-- Browser/file manager found: Chromium and Nautilus
-- Educational applications installed: GCompris 26.1; Amberol is also available though the child Music tile uses the smaller bundled player.
+- Activity runtimes: Chromium, Python 3, and GCompris 26.1.
+- Stories reader: OmaBook non-AI `v0.1.1`, pinned as a Git submodule at `d03520444e8a03a4063183908c22816ce00f0d04`.
 - User-installed Omarchy shell plugin: `little-o.home`.
 - Live Hyprland session confirmed at 1920×1080.
-- Child bar contains only Home, clock, and audio. Screensaver is 900 seconds; lock remains effectively disabled until separate parent/child accounts are designed.
-- Hardware: Intel Core i3-1115G4 (2 cores/4 threads), 7.5 GiB RAM and 14 GiB swap. Hermes therefore uses Faster Whisper `tiny`; Voxtype is not installed and would duplicate the current STT path.
+- Child bar contains Home, clock, Bluetooth, and audio. Screensaver is 900 seconds; lock remains effectively disabled until separate parent/child accounts are designed.
+- The default pointer uses the existing cursor theme at 64 px (up from 24 px) for improved visibility.
+- A Bose Color II SoundLink is paired, trusted, connected, and configured as the default audio output.
+- The private OmaBook library contains 13 public-domain children's books with extracted covers.
+- Hardware: Intel Core i3-1115G4 (2 cores/4 threads), 7.5 GiB RAM and 14 GiB swap.
 
 ## Work completed
 
@@ -35,7 +39,7 @@ Functional beta installed; a complete supervised Grok voice turn and child usabi
 - Simplified the child bar to Home, time, and audio. Backup: `~/.config/omarchy/shell.json.bak.little-o-20260830`.
 - Added `~/.local/bin/little-o-launch` with fixed activity routing. Tux Paint/GCompris launch automatically when installed; unfinished activities show a gentle notification.
 - Captured and visually compared the live 1920×1080 implementation. See `design-qa.md`; final result passed.
-- Verified Hermes Agent `0.20.6`. It is configured for `xai-oauth` with `grok-4.6`; Hermes reports xAI OAuth logged in.
+- Verified Hermes Agent `0.20.6`; at the time, its xAI OAuth credential was active. This prototype was later retired from child mode.
 
 ## Production-hardening update — 2026-08-30
 
@@ -54,14 +58,43 @@ Functional beta installed; a complete supervised Grok voice turn and child usabi
 - Changed Talk to Helper into a one-action flow: it waits for the Hermes window, focuses it, sends Hermes's `Ctrl+B` voice shortcut, and returns Home when Hermes closes.
 - Extended `bin/doctor` to report the default microphone, required one-tap voice tooling, active Grok model, and xAI OAuth state without exposing secrets.
 
+## Accessibility and Bluetooth update — 2026-09-20
+
+- Increased the default pointer from 24 px to 64 px without changing its theme. Persistent `XCURSOR_SIZE` and `HYPRCURSOR_SIZE` overrides were added to `~/.config/hypr/hyprland.lua`, and the GTK cursor-size setting was changed to 64.
+- Applied the pointer size immediately to Hyprland and the current D-Bus/systemd user environment. `hyprctl reload` completed successfully and `hyprctl configerrors` returned no errors.
+- Added the built-in `omarchy.bluetooth` widget beside `omarchy.audio` on the child bar so Bluetooth devices can be managed without a terminal.
+- Paired, bonded, trusted, and connected the Bose Color II SoundLink. The speaker reported a full battery during setup.
+- Set the Bose speaker as the default PipeWire/PulseAudio output and confirmed the running GCompris audio streams were routed to it.
+- Created recoverable configuration backups at `~/.config/hypr/hyprland.lua.bak.cursor-size-24` and `~/.config/omarchy/shell.json.bak.bluetooth-menu`.
+
+## Children's library expansion — 2026-09-20
+
+- Downloaded 12 image-inclusive EPUB3 editions from Project Gutenberg into the private `~/Books/Carl` content folder: *A Little Princess*, *Alice's Adventures in Wonderland*, *Just So Stories*, *Peter Pan*, *The Adventures of Pinocchio*, *The Jungle Book*, *The Railway Children*, *The Secret Garden*, *The Velveteen Rabbit*, *The Wind in the Willows*, *The Wonderful Wizard of Oz*, and *Winnie-the-Pooh*.
+- Verified on each Project Gutenberg catalog page that the selected edition is public domain in the United States. Exact provenance is recorded in `docs/DEPENDENCIES.md`; the EPUB files remain outside this repository.
+- Validated every downloaded EPUB as a readable ZIP archive before moving it into the content folder.
+- Backed up the reader database to `~/.local/share/omabook/omabook.db.bak.books-20260920`, then imported the folder through OmaBook's own import pipeline.
+- Verified a healthy SQLite database with 13 books, 13 unique file hashes, 13 extracted covers, and no EPUB files left unimported.
+
+## UX, media, and offline-reader update — 2026-10-26
+
+- Moved the approved six-tile catalog into validated `activities.json`; pointer hover, keyboard selection, focus rings, and accessible names now agree.
+- Replaced the one-click adult exit with a visible 1.8-second hold while retaining Escape and terminal recovery for adults.
+- Routed child activities to workspace 10 so a terminal or maintenance window cannot tile beside an activity.
+- Replaced the file-manager and manual music-picker flows with large local Music and read-only My Things surfaces restricted to `~/Music/Carl` and `~/Pictures/Carl`.
+- Added a repeatable project test command, non-mutating installer dry run, persistent first-install recovery baseline, installed-source drift checks, and shell restart/recovery hardening.
+- Added a CC0 starter library of three original EPUB stories, three original instrumental WAV files, and three original AI-assisted illustrations. Installation seeds missing content without overwriting family files.
+- Added OmaBook as a Git submodule pinned to its tagged, offline, explicitly non-AI `v0.1.1` release. The reader vendors its reviewed foliate-js engine.
+- Removed **Talk to Helper** from Home and removed Hermes from installation and health requirements after supervised use found the interaction laggy and unreliable. The old bridge is retained only as inactive research with measurable criteria for any future experiment.
+- Captured a fresh live 1920×1080 product audit covering Home, Draw, Music, and My Things. Private media names and conversation captures remain ignored outside Git.
+
 ## Next recommended session
 
 Run the first supervised usability pass:
 
-1. Use **Talk to Helper** and verify a complete Grok voice turn: capture, transcription, response, and playback.
-2. Optionally remove the two inactive Anthropic credentials from Hermes after confirming they are no longer wanted.
-3. Ask Carl to launch all six tiles and return Home; note misses, hesitations, accidental launches, and whether he recognizes the pictures.
-4. Add DRM-free books to `~/Books/Carl` and music to `~/Music/Carl`, then import the book folder in OmaBook.
+1. After the next login or reboot, verify that the 64 px pointer, Bluetooth bar widget, and Bose default output are retained.
+2. Ask Carl to launch all six tiles and return Home; note misses, hesitations, accidental launches, and whether he recognizes the pictures.
+3. Confirm that the starter songs and pictures make Music and My Things immediately understandable without coaching.
+4. Open each starter EPUB in the pinned OmaBook reader and observe page-turn and return-to-library behavior.
 5. Confirm inactivity behavior and plan the `anthony` administrator account migration.
 
 ## Guardrails for future agents

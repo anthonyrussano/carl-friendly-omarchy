@@ -33,7 +33,7 @@ Carl can log in and independently choose a small set of safe activities from a l
 
 - A locked-down security boundary against a determined user.
 - Replacing Hyprland, Omarchy Shell, or the whole login/session stack.
-- Social features, surveillance, or detailed behavioral analytics. The parent-approved, supervised Hermes voice helper is an explicit exception to the original cloud/generative-chat non-goal.
+- Social features, surveillance, detailed behavioral analytics, or a child-facing AI agent. The retired Hermes prototype did not meet the reliability bar.
 - Installing a large collection of unreviewed themes/plugins.
 - Building a full educational curriculum before navigation is validated with Carl.
 
@@ -44,7 +44,7 @@ Carl can log in and independently choose a small set of safe activities from a l
 - [ ] Confirm display size, input devices, touch capability, audio, and whether Carl has a separate Linux account.
 - [ ] Capture screenshots/video of the current flow and record Carl's successful and failed navigation attempts.
 - [x] Add an installer that backs up only files it owns or patches.
-- [x] Add `doctor`, install, update, and recoverable `uninstall` commands. (`install --dry-run` remains a release-hardening item.)
+- [x] Add `doctor`, install, update, recoverable `uninstall`, and non-mutating `install --dry-run` commands.
 - [x] Record current Omarchy version and validate the live plugin on install.
 
 Checkpoint: dry-run reports exact proposed changes; uninstall restores the captured baseline.
@@ -62,11 +62,12 @@ Checkpoint: Carl completes 4 of 5 launch-and-return attempts without verbal navi
 
 - [x] Create a namespaced plugin, `little-o.home`, with a valid `manifest.json`.
 - [x] Keep the built-in Omarchy menu intact for parent mode.
-- [ ] Build tiles from a declarative `activities.json` schema.
+- [x] Build tiles from a validated, declarative `activities.json` schema.
 - [x] Simplify the bar for child mode and provide an obvious Home control.
 - [ ] Add only necessary Hyprland overrides, preserving an emergency parent shortcut.
 - [x] Validate the plugin with `omarchy plugin validate`; no Hyprland configuration override was needed.
 - [x] Place Home on Wayland `Top` so Omarchy overlay panels receive pointer input without click-through.
+- [x] Route every child activity to a dedicated workspace and return Home after it closes.
 
 Checkpoint: child and parent modes switch reliably; a broken plugin cannot strand the adult outside the normal desktop.
 
@@ -84,6 +85,7 @@ Checkpoint: all essential meaning survives without color or sound; labels remain
 
 - [x] Evaluate GCompris and purpose-built local activities against privacy, input, exit behavior, startup speed, and age fit.
 - [x] Install GCompris and bundle the small Draw/Music fallback activity pack.
+- [x] Pin the offline, non-AI OmaBook reader and include a license-safe starter library of books, songs, and pictures.
 - [ ] Add optional spoken instructions recorded by a trusted adult or sourced under a compatible license.
 - [ ] Store local progress in a documented, deletable format.
 
@@ -95,7 +97,7 @@ Checkpoint: every activity works offline after installation, exits back Home, an
 - [ ] Observe several short sessions; revise based on behavior rather than preference alone.
 - [ ] Run a parent escape/recovery drill.
 - [x] Record privacy, dependency, license, provenance, and third-party revision details for the current stack.
-- [x] Add one-action Hermes voice startup and automated checks for microphone selection, STT dependencies, and provider authentication.
+- [x] Remove the Hermes helper from child mode after supervised use exposed latency and reliability problems; retain only an inactive research record and re-entry criteria.
 
 Checkpoint: five consecutive child sessions without adult recovery; parent recovery works after forced activity and shell crashes.
 
@@ -125,7 +127,7 @@ Checkpoint: a clean Omarchy test account can install, validate, use, and uninsta
 
 ### Won't yet
 
-- Open-ended browser, online multiplayer, AI tutor, cloud sync, competitive leaderboards.
+- Open-ended browser, online multiplayer, AI tutor/agent, cloud sync, competitive leaderboards.
 
 ## Decisions still needed from the parent
 

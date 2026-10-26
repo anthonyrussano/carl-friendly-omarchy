@@ -6,7 +6,7 @@ This repository is the project record and, later, the shareable implementation. 
 
 ## Current status
 
-The first usable system is installed. The active `Little O` theme and `little-o.home` plugin provide a full-screen six-tile child home, simplified bar, large Hermes helper action, and a grown-up path back to stock Omarchy. Every activity tile now has a working launch target.
+The current beta is installed on the reference laptop. The active `Little O` theme and `little-o.home` plugin provide a full-screen six-tile child home, simplified bar, and a deliberate grown-up path back to stock Omarchy. Every activity opens full-screen on the dedicated child workspace and returns Home when it closes. The earlier Hermes voice-helper prototype has been removed from child mode after supervised use found it laggy and unreliable.
 
 Start with:
 
@@ -44,18 +44,17 @@ Do not edit `/usr/share/omarchy/`. It is packaged, read-only project input and w
 - Home bar button: reopen the child home.
 - Arrow keys: move the selected activity.
 - Enter or Space: open the selected activity.
-- Escape or **Grown-ups**: leave child home and open the stock Omarchy menu.
-- **Talk to Helper**: open Hermes Desktop and automatically start a voice conversation.
+- Escape: emergency keyboard path to the stock Omarchy menu.
+- Hold **Hold for grown-ups** for 1.8 seconds: deliberate pointer/touch path to the stock menu.
 
 The activity launcher is intentionally fixed-command routing rather than arbitrary menu shell strings:
 
 - **Draw** opens the bundled touch/mouse drawing activity and saves PNG pictures locally.
 - **Letters** opens GCompris's spoken letter-finding activity at preschool difficulty.
 - **Numbers** opens GCompris's learn-digits activity at preschool difficulty.
-- **Stories** opens the locally built OmaBook AI branch. `~/Books/Carl` contains a public-domain starter EPUB.
-- **Music** opens the bundled music picker/player for files in `~/Music/Carl`.
-- **My Things** opens `~/Pictures/Carl` in Nautilus.
-- **Talk to Helper** opens the built Hermes Desktop, focuses it, and automatically invokes its `Ctrl+B` voice-conversation action. Local speech recognition, xAI Grok OAuth, and Edge speech output keep the laptop workflow simple.
+- **Stories** opens the pinned, fully offline, non-AI OmaBook `v0.1.1` release.
+- **Music** automatically lists and plays supported files from `~/Music/Carl` in a large local player.
+- **My Things** opens a read-only, child-sized picture gallery for `~/Pictures/Carl`.
 
 Closing an activity summons the Little O home again.
 
@@ -64,11 +63,14 @@ Closing an activity summons the Little O home again.
 From this repository:
 
 ```bash
+bin/install --dry-run
 bin/install
+bin/install-omabook
+bin/test
 bin/doctor
 ```
 
-`bin/install` is repeatable and creates timestamped backups under `~/.local/state/little-o/backups/`. `bin/doctor` is read-only and reports missing components without printing credentials.
+`bin/install --dry-run` validates the source and previews the owned paths without changing files. `bin/install` is repeatable, preserves a first-install recovery baseline, and creates timestamped backups under `~/.local/state/little-o/backups/`. `bin/test` checks the source and local web activities; `bin/doctor` is read-only and checks the installed system without printing credentials.
 
 The system-level setup uses one visible administrator prompt:
 
@@ -76,15 +78,16 @@ The system-level setup uses one visible administrator prompt:
 bin/finish-system-setup
 ```
 
-That installs the offline speech backend for OmaBook and gives Electron's sandbox helper its required root-owned permissions. It has been completed on the reference laptop; Talk to Helper retains an automatic `--no-sandbox` compatibility fallback for incomplete installations.
+That installs the host packages used by the shell, activities, and pinned reader. It has been completed on the reference laptop.
 
-To refresh the experimental OmaBook branch and rebuild it:
+OmaBook is a Git submodule pinned to reviewed tag `v0.1.1` and commit `d03520444e8a03a4063183908c22816ce00f0d04`. To restore and reinstall that exact reader:
 
 ```bash
-bin/update-omabook
+git submodule update --init vendor/omabook
+bin/install-omabook
 ```
 
-To remove Little O while preserving personal content and AI data:
+To remove Little O while preserving personal content:
 
 ```bash
 bin/uninstall
@@ -109,11 +112,11 @@ Source stays in this repository; installed copies live only in user-owned paths 
 - Music: `~/Music/Carl`
 - Pictures and saved drawings: `~/Pictures/Carl` and the browser's configured download directory.
 
-The included *Tale of Peter Rabbit* test book comes from [Project Gutenberg](https://www.gutenberg.org/ebooks/14838), which marks it public domain in the United States. It is test content, not part of the distributable project source.
+The repository includes a small CC0 starter library: three original EPUB stories, three original instrumental melodies, and three original AI-assisted illustrations. `bin/install` seeds only missing files and never overwrites family content. The reference machine also has a private collection of public-domain children's books downloaded separately from Project Gutenberg; exact provenance is recorded in [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
 
-## AI provider
+## AI helper status
 
-Hermes is configured for `xai-oauth` with `grok-4.6`; OAuth and local microphone/speech components pass the system check. Provider credentials live only under Hermes's private configuration and are never copied into this repository. Claude consumer credentials were deliberately not chosen for the third-party harness because Anthropic documents consumer-plan access and API/application access as separate products.
+No AI agent or model provider is part of the child experience. The Hermes integration was retired because the full voice loop was too slow and failure-prone in real use. Its small bridge and the criteria for any future experiment remain under [`research/hermes-prototype/`](research/hermes-prototype/), but the installer actively retires an older installed bridge. Provider selection is intentionally deferred until a provider-neutral interaction prototype can meet the reliability and latency bar without exposing it to Carl.
 
 ## Proposed name for the public project
 

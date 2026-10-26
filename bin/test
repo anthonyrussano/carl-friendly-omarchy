@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+temporary="$(mktemp -d)"
+trap 'rm -rf -- "$temporary"' EXIT
+
+printf 'Little O project checks\n\n'
+
+for script in "$root"/bin/* "$root"/hooks/*; do
+  [[ -f "$script" ]] || continue
+  bash -n "$script"
+done
+printf 'PASS  Shell syntax\n'
+
+python3 - "$root" <<'PY'
+import ast
+import json
+from html.parser import HTMLParser
+from pathlib import Path
+import sys
+
+root = Path(sys.argv[1])
+activities = json.loads((root / "src/little-o.home/activities.json").read_text())
+expected = {"draw", "letters", "numbers", "stories", "music", "my-things"}
+assert len(activities) == 6
+assert {item["id"] for item in activities} == expected
+assert all(item["asset"].startswith("assets/") for item in activities)
+json.loads((root / "config/shell.json").read_text())
+starter = json.loads((root / "starter-library/manifest.json").read_text())
+assert starter["license"] == "CC0-1.0"
+assert len(starter["books"]) == len(starter["music"]) == len(starter["pictures"]) == 3
+ast.parse((root / "apps/little-o-gallery.py").read_text())
+ast.parse((root / "apps/little-o-music.py").read_text())
+ast.parse((root / "tools/build-starter-library.py").read_text())
+
+class Parser(HTMLParser):
+    pass
+
+Parser().feed((root / "apps/little-o-playroom.html").read_text())
+PY
+printf 'PASS  JSON, Python, and HTML structure\n'
+
+omarchy plugin validate "$root/src/little-o.home"
+printf 'PASS  Omarchy plugin validation\n'
+
+mkdir -p "$temporary/home/Pictures/Carl"
+python3 "$root/apps/little-o-gallery.py" --check "$temporary/home/Pictures/Carl" >/dev/null
+printf 'PASS  Read-only picture gallery\n'
+mkdir -p "$temporary/home/Music/Carl"
+python3 "$root/apps/little-o-music.py" --check "$temporary/home/Music/Carl" >/dev/null
+printf 'PASS  Local music library\n'
+
+python3 "$root/tools/build-starter-library.py" --check >/dev/null
+printf 'PASS  Starter media library\n'
+
+expected_omabook='d03520444e8a03a4063183908c22816ce00f0d04'
+actual_omabook="$(git -C "$root/vendor/omabook" rev-parse HEAD 2>/dev/null || true)"
+[[ "$actual_omabook" == "$expected_omabook" ]]
+grep -q 'This branch has no AI' "$root/vendor/omabook/README.md"
+printf 'PASS  Pinned non-AI OmaBook submodule\n'
+
+if rg -n 'Talk to Helper|root\.launch\("helper"\)' "$root/src" "$root/bin/little-o-launch" >/dev/null; then
+  printf 'FAIL  AI helper remains in the child experience\n' >&2
+  exit 1
+fi
+printf 'PASS  AI helper excluded from child mode\n'
+
+HOME="$temporary/home" "$root/bin/install" --dry-run >/dev/null
+printf 'PASS  Installer dry run\n'
+
+for mode in draw letters numbers music; do
+  timeout 25s chromium --headless --disable-gpu --no-sandbox --disable-extensions \
+    --user-data-dir="$temporary/chromium-$mode" --dump-dom \
+    "file://$root/apps/little-o-playroom.html?mode=$mode" 2>/dev/null | grep -q 'Little O Playroom'
+done
+printf 'PASS  Offline activity startup\n'
+
+printf '\nAll project checks passed.\n'

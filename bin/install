@@ -3,11 +3,69 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 stamp="$(date +%Y%m%d-%H%M%S)"
-backup="$HOME/.local/state/little-o/backups/$stamp"
+backup="$HOME/.local/state/little-o/backups/$stamp-$$"
+baseline="$HOME/.local/state/little-o/baseline"
+dry_run=false
 
-for command in omarchy omarchy-shell chromium nautilus; do
+usage() {
+  printf 'Usage: %s [--dry-run]\n' "${0##*/}"
+}
+
+case "${1:-}" in
+  '') ;;
+  --dry-run) dry_run=true ;;
+  -h|--help) usage; exit 0 ;;
+  *) usage >&2; exit 2 ;;
+esac
+
+for command in omarchy omarchy-shell chromium jq notify-send python3 uwsm-app; do
   command -v "$command" >/dev/null || { printf 'Missing required command: %s\n' "$command" >&2; exit 1; }
 done
+
+for source in \
+  "$root/src/little-o.home/manifest.json" \
+  "$root/src/little-o.home/activities.json" \
+  "$root/theme/little-o/colors.toml" \
+  "$root/apps/little-o-playroom.html" \
+  "$root/apps/little-o-gallery.py" \
+  "$root/apps/little-o-music.py" \
+  "$root/starter-library/manifest.json"; do
+  [[ -f "$source" ]] || { printf 'Missing project file: %s\n' "$source" >&2; exit 1; }
+done
+
+omarchy plugin validate "$root/src/little-o.home"
+
+if $dry_run; then
+  cat <<EOF
+Little O install dry run (no files changed)
+
+Would preserve the first-install recovery baseline under:
+  $baseline
+Would back up every replaced path under:
+  $backup
+Would install the home plugin, theme, activity launcher, local playroom,
+read-only picture gallery, local music library, GCompris settings, and login
+hook. Would seed the original starter books, songs, and pictures without
+overwriting family content, and retire the old Hermes child bridge if present.
+Would set the Little O theme, apply the child bar, restart Omarchy Shell, and open Home.
+
+Run without --dry-run to apply these changes.
+EOF
+  exit 0
+fi
+
+if [[ ! -f "$baseline/initialized" ]]; then
+  mkdir -p "$baseline"
+  if [[ -f "$HOME/.config/omarchy/shell.json.bak.little-o-20260830" ]]; then
+    cp "$HOME/.config/omarchy/shell.json.bak.little-o-20260830" "$baseline/shell.json"
+  elif [[ -f "$HOME/.config/omarchy/shell.json" ]]; then
+    cp "$HOME/.config/omarchy/shell.json" "$baseline/shell.json"
+  else
+    : > "$baseline/shell.json.absent"
+  fi
+  omarchy theme current > "$baseline/theme.txt" 2>/dev/null || printf 'Tokyo Night\n' > "$baseline/theme.txt"
+  : > "$baseline/initialized"
+fi
 
 mkdir -p "$backup" "$HOME/.config/omarchy/plugins" "$HOME/.config/omarchy/themes" \
   "$HOME/.local/bin" "$HOME/.local/share/little-o" "$HOME/Books/Carl" \
@@ -19,24 +77,54 @@ for path in \
   "$HOME/.config/omarchy/themes/little-o" \
   "$HOME/.config/gcompris/gcompris-qt.conf" \
   "$HOME/.local/bin/little-o-launch" \
-  "$HOME/.local/share/little-o/little-o-playroom.html"; do
+  "$HOME/.local/share/little-o/little-o-playroom.html" \
+  "$HOME/.local/share/little-o/little-o-gallery.py" \
+  "$HOME/.local/share/little-o/little-o-music.py"; do
   if [[ -e "$path" ]]; then cp -a "$path" "$backup/"; fi
 done
+
+# Hermes proved too slow and unreliable for independent child use. Preserve a
+# previously installed bridge in this run's recoverable backup, but remove it
+# from the active desktop integration.
+legacy_helper="$HOME/.hermes/desktop-plugins/little-o-helper"
+if [[ -e "$legacy_helper" ]]; then
+  mv "$legacy_helper" "$backup/little-o-helper.retired"
+fi
 
 mkdir -p "$HOME/.config/omarchy/plugins/little-o.home" "$HOME/.config/omarchy/themes/little-o"
 cp -a "$root/src/little-o.home/." "$HOME/.config/omarchy/plugins/little-o.home/"
 cp -a "$root/theme/little-o/." "$HOME/.config/omarchy/themes/little-o/"
 cp "$root/bin/little-o-launch" "$HOME/.local/bin/little-o-launch"
 cp "$root/apps/little-o-playroom.html" "$HOME/.local/share/little-o/little-o-playroom.html"
+cp "$root/apps/little-o-gallery.py" "$HOME/.local/share/little-o/little-o-gallery.py"
+cp "$root/apps/little-o-music.py" "$HOME/.local/share/little-o/little-o-music.py"
 cp "$root/config/shell.json" "$HOME/.config/omarchy/shell.json"
 mkdir -p "$HOME/.config/gcompris"
 sed "s|@HOME@|$HOME|g" "$root/config/gcompris-qt.conf.in" > "$HOME/.config/gcompris/gcompris-qt.conf"
-chmod +x "$HOME/.local/bin/little-o-launch"
+chmod +x "$HOME/.local/bin/little-o-launch" "$HOME/.local/share/little-o/little-o-gallery.py" \
+  "$HOME/.local/share/little-o/little-o-music.py"
 
-omarchy plugin validate "$HOME/.config/omarchy/plugins/little-o.home"
+for file in "$root"/starter-library/books/*; do
+  target="$HOME/Books/Carl/${file##*/}"
+  [[ -e "$target" ]] || install -m 0644 "$file" "$target"
+done
+for file in "$root"/starter-library/music/*; do
+  target="$HOME/Music/Carl/${file##*/}"
+  [[ -e "$target" ]] || install -m 0644 "$file" "$target"
+done
+for file in "$root"/starter-library/pictures/*; do
+  target="$HOME/Pictures/Carl/${file##*/}"
+  [[ -e "$target" ]] || install -m 0644 "$file" "$target"
+done
+
 omarchy hook install post-boot "$root/hooks/little-o-home"
 omarchy theme set "Little O"
-omarchy-shell shell rescanPlugins || omarchy restart shell
+omarchy restart shell
+for _ in {1..20}; do
+  omarchy-shell shell ping >/dev/null 2>&1 && break
+  sleep 0.25
+done
+omarchy-shell -q shell summon little-o.home '{}'
 
 printf 'Little O installed. Backup: %s\n' "$backup"
 printf 'Run %s/bin/doctor to verify the installation.\n' "$root"

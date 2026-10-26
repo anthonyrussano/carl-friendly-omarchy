@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source_dir="$root/vendor/omabook"
+expected_revision="d03520444e8a03a4063183908c22816ce00f0d04"
+
+if [[ ! -e "$source_dir/.git" ]]; then
+  git -C "$root" submodule update --init --recursive vendor/omabook
+fi
+
+actual_revision="$(git -C "$source_dir" rev-parse HEAD 2>/dev/null || true)"
+if [[ "$actual_revision" != "$expected_revision" ]]; then
+  printf 'OmaBook is not at the reviewed v0.1.1 revision.\n' >&2
+  printf 'Expected: %s\nActual:   %s\n' "$expected_revision" "${actual_revision:-missing}" >&2
+  printf 'Restore the repository pin with: git submodule update --init vendor/omabook\n' >&2
+  exit 1
+fi
+
+"$source_dir/bin/test"
+"$source_dir/bin/install-local"
+printf 'Installed pinned, offline OmaBook v0.1.1 (%s).\n' "$expected_revision"

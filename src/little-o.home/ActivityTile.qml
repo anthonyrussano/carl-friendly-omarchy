@@ -8,13 +8,19 @@ Rectangle {
   required property string asset
   required property color tileColor
   required property int index
+  required property bool selected
   signal chosen(string activityId)
+  signal previewed()
 
   radius: Math.min(width, height) * 0.075
   color: tileColor
-  border.width: activeFocus ? 6 : 0
+  border.width: selected || activeFocus ? 6 : 0
   border.color: "#082859"
   scale: mouseArea.pressed ? 0.97 : (mouseArea.containsMouse ? 1.015 : 1.0)
+  activeFocusOnTab: true
+  Accessible.role: Accessible.Button
+  Accessible.name: label
+  Accessible.description: "Open " + label
 
   Behavior on scale {
     NumberAnimation { duration: 90 }
@@ -52,6 +58,7 @@ Rectangle {
     anchors.fill: parent
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
+    onEntered: tile.previewed()
     onClicked: tile.chosen(tile.activityId)
   }
 }

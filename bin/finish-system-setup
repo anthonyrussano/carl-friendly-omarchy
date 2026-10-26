@@ -1,19 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-sandbox="$HOME/.hermes/hermes-agent/apps/desktop/release/linux-unpacked/chrome-sandbox"
-
 printf 'Anthony: enter your administrator password to finish Little O.\n'
 while ! sudo -v; do
   printf '\nThat did not work. Try the administrator password again, or press Ctrl+C to leave this for later.\n'
 done
 
-sudo pacman -S --needed speech-dispatcher
-
-if [[ -e "$sandbox" ]]; then
-  sudo chown root:root "$sandbox"
-  sudo chmod 4755 "$sandbox"
-fi
+sudo pacman -S --needed chromium gcompris-qt jq python qt6-base qt6-declarative \
+  qt6-imageformats qt6-svg qt6-webchannel qt6-webengine poppler
 
 printf '\nSystem-level Little O setup is complete.\n'
 printf 'Run bin/doctor from the project folder for a fresh report.\n'

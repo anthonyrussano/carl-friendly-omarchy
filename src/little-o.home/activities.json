@@ -1,0 +1,38 @@
+[
+  {
+    "id": "draw",
+    "label": "Draw",
+    "asset": "assets/activity-draw.png",
+    "color": "#f25b3f"
+  },
+  {
+    "id": "letters",
+    "label": "Letters",
+    "asset": "assets/activity-letters.png",
+    "color": "#25b9b7"
+  },
+  {
+    "id": "numbers",
+    "label": "Numbers",
+    "asset": "assets/activity-numbers.png",
+    "color": "#f7c928"
+  },
+  {
+    "id": "stories",
+    "label": "Stories",
+    "asset": "assets/activity-stories.png",
+    "color": "#86bd35"
+  },
+  {
+    "id": "music",
+    "label": "Music",
+    "asset": "assets/activity-music.png",
+    "color": "#8c65bd"
+  },
+  {
+    "id": "my-things",
+    "label": "My Things",
+    "asset": "assets/activity-my-things.png",
+    "color": "#308ed1"
+  }
+]

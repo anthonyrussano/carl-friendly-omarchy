@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "license": "CC0-1.0",
+  "books": [
+    "Fox and Bird Build Together.epub",
+    "Turtle Counts the Pond.epub",
+    "Bear Says Goodnight.epub"
+  ],
+  "music": [
+    "sunny-steps.wav",
+    "pond-parade.wav",
+    "quiet-stars.wav"
+  ],
+  "pictures": [
+    {
+      "file": "friends-build-together.webp",
+      "prompt": "A cheerful small red fox and a round blue bird sharing yellow building blocks in a sunny playroom; warm hand-painted gouache, calm and child-safe, no text or logos."
+    },
+    {
+      "file": "pond-friends.webp",
+      "prompt": "A friendly green turtle and tiny yellow duck exploring a calm garden pond; warm hand-painted gouache, calm and child-safe, no text or logos."
+    },
+    {
+      "file": "bedtime-book.webp",
+      "prompt": "A smiling little brown bear in striped pajamas reading under a crescent-moon night light; warm hand-painted gouache, peaceful and child-safe, no text or logos."
+    }
+  ]
+}

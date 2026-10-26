@@ -5,29 +5,42 @@
 | Component | Purpose | Source/license notes |
 |---|---|---|
 | Omarchy Shell / Quickshell | Child home and status bar | Provided by the host Omarchy system |
-| Chromium | Bundled local Draw and Music activities | Host package; local `file:` content, no application telemetry |
+| Chromium | Local Draw, Music, and My Things interfaces | Host package; local content only, no arbitrary browsing |
+| Python 3 standard library | Read-only localhost Music and My Things servers | Host package; servers bind only to `127.0.0.1` and expose approved media roots |
 | GCompris 26.1 | Letters and Numbers | Arch `extra/gcompris-qt`; GPL educational suite |
-| Nautilus | My Things | Host file manager |
 | PipeWire/WirePlumber (`wpctl`) | Audio routing and input selection | Host Omarchy audio stack |
-| `wtype` and `hyprctl` | Focus Hermes and invoke voice in one action | Host Omarchy/Wayland tools |
-| `speech-dispatcher` | Lightweight offline story narration | Arch package |
+| `hyprctl` | Dedicated child workspace routing | Host Omarchy/Wayland tool |
 
 ## Stories
 
-OmaBook is installed from `newx/omabook`, branch `main-with-ai-features`, at reviewed revision `2caba05140af22f0684e1b746e0d4a71079259fe`, and built under `~/.local/share/little-o/omabook`. It is MIT-licensed. Its reader engine is `johnfactotum/foliate-js`, revision `78914aef4466eb960965702401634c2cb348e9b1`. The branch is experimental; `bin/update-omabook` makes updates explicit rather than unattended.
+OmaBook is included as `vendor/omabook`, a Git submodule of `newx/omabook` pinned to tagged release `v0.1.1` and reviewed revision `d03520444e8a03a4063183908c22816ce00f0d04`. That release's main branch explicitly contains no AI, network model, summaries, questions, or speech service. It is MIT-licensed and installs locally through `bin/install-omabook`.
 
-Read-aloud prefers OmaBook's local Kokoro service when separately enabled. The lighter default is Qt Speech with the Arch `speech-dispatcher` package. OmaBook questions/summaries require a separately supported AI configuration; they do not inherit Hermes credentials automatically.
+The reader engine is vendored inside the pinned submodule from `johnfactotum/foliate-js` revision `78914aef4466eb960965702401634c2cb348e9b1`. This makes the complete reader source reproducible without an additional nested checkout. Upgrading the reader means reviewing and committing a new main-repository submodule pointer; `bin/update-omabook` intentionally installs the current pin instead of tracking a branch.
 
-The local starter book, *The Tale of Peter Rabbit* by Beatrix Potter, is downloaded separately to the private content directory from Project Gutenberg ebook 14838. Project Gutenberg identifies that edition as public domain in the United States. It is not committed or redistributed by this repository.
+## Included starter content
 
-## Helper
+`starter-library/` contains three original EPUB stories, three original synthesized instrumental WAV tracks, and three original AI-assisted illustrations. They are dedicated under CC0-1.0 to the extent rights exist. The image prompts and file list are recorded in `starter-library/manifest.json`; no third-party reference images, logos, or characters were used. `tools/build-starter-library.py` reproducibly builds and validates the EPUB and WAV files.
 
-Hermes Agent 0.20.6 is installed separately under `~/.hermes`. Little O does not vendor it. The desktop build supplies voice conversation, and this machine uses:
+The reference machine's private library contains the following Project Gutenberg editions:
 
-- local `faster-whisper` 1.2.1 with the `tiny` model for speech recognition;
-- Edge TTS with `en-US-AriaNeural` for spoken replies;
-- xAI OAuth with `grok-4.6` for reasoning.
+| Book | Project Gutenberg ebook |
+|---|---|
+| *A Little Princess* | [146](https://www.gutenberg.org/ebooks/146) |
+| *Alice's Adventures in Wonderland* | [11](https://www.gutenberg.org/ebooks/11) |
+| *Just So Stories* | [2781](https://www.gutenberg.org/ebooks/2781) |
+| *Peter Pan* | [16](https://www.gutenberg.org/ebooks/16) |
+| *The Adventures of Pinocchio* | [500](https://www.gutenberg.org/ebooks/500) |
+| *The Jungle Book* | [236](https://www.gutenberg.org/ebooks/236) |
+| *The Railway Children* | [1874](https://www.gutenberg.org/ebooks/1874) |
+| *The Secret Garden* | [17396](https://www.gutenberg.org/ebooks/17396) |
+| *The Tale of Peter Rabbit* | [14838](https://www.gutenberg.org/ebooks/14838) |
+| *The Velveteen Rabbit* | [11757](https://www.gutenberg.org/ebooks/11757) |
+| *The Wind in the Willows* | [289](https://www.gutenberg.org/ebooks/289) |
+| *The Wonderful Wizard of Oz* | [55](https://www.gutenberg.org/ebooks/55) |
+| *Winnie-the-Pooh* | [67098](https://www.gutenberg.org/ebooks/67098) |
 
-Hermes data, conversations, credentials, and models remain outside this repository. `bin/uninstall` deliberately preserves them.
+Project Gutenberg identifies each listed edition as public domain in the United States. The local copies are downloaded separately into `~/Books/Carl`; they are neither committed nor redistributed by this repository. Users outside the United States should check the copyright laws that apply where they live.
 
-Voxtype is not installed on the reference machine. It is useful for general desktop dictation, but not required for Hermes voice conversation; running a second always-on recognizer adds memory/CPU use and microphone contention on this 2-core/4-thread laptop. Revisit it only if system-wide dictation becomes a separate requirement.
+## Retired helper prototype
+
+Hermes is not a runtime dependency and no AI provider is selected for the product. The retired bridge remains only under `research/hermes-prototype/` with the observed failure modes and the acceptance bar for a future, adult-launched experiment. `bin/install` removes an older installed Little O bridge from Hermes and stores it in that run's recoverable backup.

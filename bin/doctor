@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 failures=0
 warnings=0
 
@@ -9,23 +10,28 @@ warn() { printf 'WARN  %s\n' "$1"; warnings=$((warnings + 1)); }
 fail() { printf 'FAIL  %s\n' "$1"; failures=$((failures + 1)); }
 check_command() { command -v "$1" >/dev/null && pass "$2" || fail "$2 (missing $1)"; }
 check_file() { [[ -e "$1" ]] && pass "$2" || fail "$2 (missing $1)"; }
+check_current() { cmp -s "$1" "$2" && pass "$3" || fail "$3 (installed copy differs from project source)"; }
 
 printf 'Little O system check\n\n'
 check_command omarchy 'Omarchy command'
 check_command omarchy-shell 'Omarchy Shell command'
-check_command chromium 'Draw/music activity runtime'
+check_command chromium 'Local activity runtime'
+check_command python3 'Read-only picture gallery runtime'
 check_command gcompris-qt 'GCompris learning activities'
-check_command nautilus 'My Things file browser'
-check_command hermes 'Hermes helper'
+check_command git 'Pinned dependency verification'
+check_command omabook 'Pinned offline story reader'
 check_command wpctl 'PipeWire audio control'
-check_command wtype 'Wayland keyboard automation for one-tap voice'
+check_command uwsm-app 'Wayland application launcher'
+check_command jq 'JSON support for activity configuration'
 check_file "$HOME/.config/omarchy/plugins/little-o.home/manifest.json" 'Home plugin installed'
+check_file "$HOME/.config/omarchy/plugins/little-o.home/activities.json" 'Activity catalog installed'
 check_file "$HOME/.config/omarchy/themes/little-o/colors.toml" 'Little O theme installed'
 check_file "$HOME/.local/bin/little-o-launch" 'Activity launcher installed'
 check_file "$HOME/.local/share/little-o/little-o-playroom.html" 'Local activity pack installed'
+check_file "$HOME/.local/share/little-o/little-o-gallery.py" 'Read-only picture gallery installed'
+check_file "$HOME/.local/share/little-o/little-o-music.py" 'Local music library installed'
 check_file "$HOME/.config/omarchy/hooks/post-boot.d/little-o-home" 'Login home hook installed'
-check_file "$HOME/.local/share/little-o/omabook/build/omabook" 'OmaBook built'
-check_file "$HOME/.hermes/hermes-agent/apps/desktop/release/linux-unpacked/Hermes" 'Hermes Desktop built'
+check_file "$HOME/.local/bin/omabook" 'OmaBook installed from the pinned submodule'
 
 if omarchy plugin validate "$HOME/.config/omarchy/plugins/little-o.home" >/dev/null 2>&1; then
   pass 'Home plugin validates'
@@ -34,6 +40,22 @@ else
 fi
 
 if bash -n "$HOME/.local/bin/little-o-launch"; then pass 'Launcher syntax'; else fail 'Launcher syntax'; fi
+if jq -e 'type == "array" and length == 6 and all(.[]; (.id | type == "string") and (.label | type == "string") and (.asset | type == "string") and (.color | test("^#[0-9a-fA-F]{6}$")))' \
+  "$HOME/.config/omarchy/plugins/little-o.home/activities.json" >/dev/null 2>&1; then
+  pass 'Activity catalog schema'
+else
+  fail 'Activity catalog schema'
+fi
+if python3 "$HOME/.local/share/little-o/little-o-gallery.py" --check "$HOME/Pictures/Carl" >/dev/null 2>&1; then
+  pass 'Read-only picture gallery startup'
+else
+  fail 'Read-only picture gallery startup'
+fi
+if python3 "$HOME/.local/share/little-o/little-o-music.py" --check "$HOME/Music/Carl" >/dev/null 2>&1; then
+  pass 'Local music library startup'
+else
+  fail 'Local music library startup'
+fi
 for mode in draw letters numbers music; do
   if chromium --headless --disable-gpu --no-sandbox --disable-extensions --dump-dom \
     "file://$HOME/.local/share/little-o/little-o-playroom.html?mode=$mode" 2>/dev/null | grep -q 'Little O Playroom'; then
@@ -47,39 +69,76 @@ activities="$(QT_QPA_PLATFORM=offscreen gcompris-qt --list-activities 2>/dev/nul
 grep -qx 'click_on_letter' <<<"$activities" && pass 'GCompris letter activity present' || fail 'GCompris letter activity missing'
 grep -qx 'learn_digits' <<<"$activities" && pass 'GCompris number activity present' || fail 'GCompris number activity missing'
 
-if ldd "$HOME/.local/share/little-o/omabook/build/omabook" 2>/dev/null | grep -q 'not found'; then
-  fail 'OmaBook has missing libraries'
+if ! command -v omabook >/dev/null 2>&1; then
+  fail 'OmaBook runtime is unavailable'
+elif ldd "$(command -v omabook)" 2>/dev/null | grep -q 'not found'; then
+  fail 'OmaBook has missing runtime libraries'
 else
   pass 'OmaBook runtime libraries'
 fi
 
-if command -v spd-say >/dev/null; then pass 'OmaBook offline read-aloud backend'; else warn 'Install speech-dispatcher to enable offline story narration'; fi
+omabook_version="$(omabook --version 2>/dev/null || true)"
+submodule_revision="$(git -C "$root/vendor/omabook" rev-parse HEAD 2>/dev/null || true)"
+if grep -q '^omabook 0\.1\.1$' <<<"$omabook_version" && \
+  [[ "$submodule_revision" == 'd03520444e8a03a4063183908c22816ce00f0d04' ]]; then
+  pass 'OmaBook is the pinned non-AI v0.1.1 release'
+else
+  fail 'OmaBook is not the pinned non-AI v0.1.1 release; run: bin/install-omabook'
+fi
 
 default_source="$(wpctl status 2>/dev/null | sed -n '/Sources:/,/Source endpoints:/p' | sed -n 's/.*\*[^0-9]*[0-9][0-9]*\. \(.*\) \[vol:.*/\1/p' | head -n1)"
 [[ -n "$default_source" ]] && pass "Default microphone: $default_source" || warn 'No default microphone detected'
 
-model="$(hermes config get model.default 2>/dev/null || true)"
-provider="$(hermes config get model.provider 2>/dev/null || true)"
-[[ "$provider" == 'xai-oauth' && "$model" == grok-* ]] && pass 'Hermes set to xAI Grok OAuth' || warn "Hermes model is ${provider:-unset}/${model:-unset}"
-
-auth_report="$(hermes doctor 2>&1 || true)"
-if [[ "$provider" == 'xai-oauth' ]] && grep -qi 'xAI OAuth (logged in)' <<<"$auth_report"; then
-  pass 'Hermes xAI OAuth credential'
-elif [[ "$provider" == 'xai-oauth' ]]; then
-  fail 'Hermes xAI OAuth is not logged in; run: hermes auth add xai-oauth'
-else
-  warn 'Hermes active-provider credential was not checked by Little O'
-fi
-
-if "$HOME/.hermes/hermes-agent/venv/bin/python" -c 'import faster_whisper, sounddevice' >/dev/null 2>&1; then
-  pass 'Hermes local speech recognition dependencies'
-else
-  fail 'Hermes local speech recognition dependencies'
-fi
-
 for folder in "$HOME/Books/Carl" "$HOME/Music/Carl" "$HOME/Pictures/Carl"; do
   [[ -d "$folder" ]] && pass "Content folder $folder" || fail "Content folder $folder"
 done
+
+starter_missing=0
+for mapping in \
+  "starter-library/books|$HOME/Books/Carl" \
+  "starter-library/music|$HOME/Music/Carl" \
+  "starter-library/pictures|$HOME/Pictures/Carl"; do
+  source_folder="$root/${mapping%%|*}"
+  target_folder="${mapping#*|}"
+  for source in "$source_folder"/*; do
+    [[ -e "$target_folder/${source##*/}" ]] || starter_missing=$((starter_missing + 1))
+  done
+done
+if (( starter_missing == 0 )); then
+  pass 'Starter books, songs, and pictures are installed'
+else
+  warn "$starter_missing starter media file(s) were removed or renamed"
+fi
+
+if [[ -e "$HOME/.hermes/desktop-plugins/little-o-helper" ]]; then
+  warn 'Retired Hermes child bridge is still installed; rerun bin/install'
+else
+  pass 'AI helper is absent from child mode'
+fi
+
+music_count="$(find "$HOME/Music/Carl" -maxdepth 1 -type f \
+  \( -iname '*.flac' -o -iname '*.m4a' -o -iname '*.mp3' -o -iname '*.oga' \
+  -o -iname '*.ogg' -o -iname '*.opus' -o -iname '*.wav' \) -printf . 2>/dev/null | wc -c)"
+if (( music_count > 0 )); then
+  pass "Music library is ready ($music_count track(s))"
+else
+  warn 'Music library is empty'
+fi
+
+current_theme="$(omarchy theme current 2>/dev/null || true)"
+[[ "$current_theme" == 'Little O' ]] && pass 'Little O theme active' || warn "Active theme is ${current_theme:-unknown}, not Little O"
+if jq -e '.bar.position == "left" and any(.bar.layout.right[]; .id == "omarchy.bluetooth") and any(.bar.layout.right[]; .id == "omarchy.audio")' \
+  "$HOME/.config/omarchy/shell.json" >/dev/null 2>&1; then
+  pass 'Child bar layout and audio controls'
+else
+  fail 'Child bar layout and audio controls'
+fi
+
+check_current "$root/src/little-o.home/activities.json" "$HOME/.config/omarchy/plugins/little-o.home/activities.json" 'Installed activity catalog is current'
+check_current "$root/apps/little-o-playroom.html" "$HOME/.local/share/little-o/little-o-playroom.html" 'Installed activity pack is current'
+check_current "$root/apps/little-o-gallery.py" "$HOME/.local/share/little-o/little-o-gallery.py" 'Installed picture gallery is current'
+check_current "$root/apps/little-o-music.py" "$HOME/.local/share/little-o/little-o-music.py" 'Installed music library is current'
+check_current "$root/bin/little-o-launch" "$HOME/.local/bin/little-o-launch" 'Installed activity launcher is current'
 
 printf '\nResult: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
 (( failures == 0 ))

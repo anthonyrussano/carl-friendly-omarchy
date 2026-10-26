@@ -47,6 +47,12 @@ The adult must always retain a documented keyboard escape and a recovery path fr
 
 ## Candidate technical shape
 
-`activities.json` should describe each approved tile: stable id, short label, artwork, optional spoken label, launch action, availability condition, and parent notes. QML renders it; content changes should not require QML edits.
+`activities.json` describes each approved tile by stable id, short label, prompt, artwork, color, and fixed launcher action. QML validates and renders the catalog, so content changes do not require layout edits.
+
+All child activities open on the same dedicated workspace, preventing terminals or maintenance windows from appearing beside them. The local Music and My Things surfaces expose only approved media folders, and My Things deliberately omits destructive file operations.
+
+The visible adult affordance uses a 1.8-second hold with progress feedback. It reduces accidental exits but is not a security boundary; Escape and the documented terminal recovery path remain available to the adult.
+
+Child mode deliberately has no open-ended AI action. The voice-agent prototype added too much latency and too many recoverable failure states for a preschool interaction. Stories use the pinned offline, non-AI OmaBook release, while a bundled starter library ensures Stories, Music, and My Things have understandable content on first use.
 
 Child mode should hide unnecessary bar widgets rather than disabling essential background services. Parent mode should reuse stock Omarchy surfaces wherever possible so upgrades remain supportable.

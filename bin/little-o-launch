@@ -3,14 +3,21 @@ set -euo pipefail
 
 action="${1:-home}"
 
-notify_coming_soon() {
-  notify-send -a "Little O" "$1" "This activity is coming soon."
-}
-
 playroom="$HOME/.local/share/little-o/little-o-playroom.html"
+gallery="$HOME/.local/share/little-o/little-o-gallery.py"
+music_app="$HOME/.local/share/little-o/little-o-music.py"
+chromium_profile="$HOME/.local/share/little-o/chromium-profile"
 
 return_home() {
   omarchy-shell shell summon little-o.home '{}' >/dev/null 2>&1 || true
+}
+
+focus_activity_workspace() {
+  local reply
+  reply="$(hyprctl dispatch 'hl.dsp.focus({ workspace = "10" })' 2>/dev/null || true)"
+  if [[ "$reply" != 'ok' ]]; then
+    hyprctl dispatch workspace 10 >/dev/null 2>&1 || true
+  fi
 }
 
 run_and_return() {
@@ -22,40 +29,43 @@ run_and_return() {
   return "$status"
 }
 
-hermes_window_present() {
-  hyprctl clients 2>/dev/null | grep -q 'class: Hermes'
-}
-
-focus_hermes_and_start_voice() {
-  local tries=0
-  while (( tries < 60 )); do
-    if hermes_window_present; then
-      # Hermes registers Ctrl+B as Start/Stop Voice Conversation. Give its
-      # renderer one additional moment after the window maps on slower PCs.
-      hyprctl dispatch focuswindow 'class:^(Hermes)$' >/dev/null 2>&1 || true
-      sleep 2
-      wtype -M ctrl -k b -m ctrl
-      notify-send -a "Little O" "Helper is listening" "Start talking to Hermes."
-      return 0
-    fi
-    sleep 0.5
-    tries=$((tries + 1))
-  done
-  notify-send -a "Little O" "Helper did not open" "Ask Dad to run the Little O system check."
-  return 1
-}
-
 launch_playroom() {
   local mode="$1"
-  mkdir -p "$HOME/.local/share/little-o/chromium-profile"
+  local preferences="$chromium_profile/Default/Preferences"
+  local temporary
+
+  mkdir -p "$chromium_profile/Default" "$HOME/Pictures/Carl"
+  temporary="$(mktemp "$chromium_profile/Default/Preferences.XXXXXX")"
+  if [[ -s "$preferences" ]] && jq empty "$preferences" >/dev/null 2>&1; then
+    jq --arg directory "$HOME/Pictures/Carl" \
+      '.download = ((.download // {}) + {default_directory: $directory, prompt_for_download: false, directory_upgrade: true})' \
+      "$preferences" > "$temporary"
+  else
+    jq -n --arg directory "$HOME/Pictures/Carl" \
+      '{download: {default_directory: $directory, prompt_for_download: false, directory_upgrade: true}}' \
+      > "$temporary"
+  fi
+  mv "$temporary" "$preferences"
+
   run_and_return chromium \
-    --user-data-dir="$HOME/.local/share/little-o/chromium-profile" \
+    --user-data-dir="$chromium_profile" \
     --app="file://${playroom}?mode=${mode}" \
     --start-maximized --no-first-run --no-default-browser-check \
     --disable-background-networking --disable-component-update --disable-sync \
     --disable-extensions --disable-vulkan \
-    --disable-features=Translate \
-    --download-default-directory="$HOME/Pictures/Carl"
+    --disable-features=Translate,MediaRouter
+}
+
+launch_gallery() {
+  mkdir -p "$HOME/Pictures/Carl"
+  if [[ -f "$gallery" ]]; then
+    run_and_return python3 "$gallery" "$HOME/Pictures/Carl" \
+      --profile "$HOME/.local/share/little-o/gallery-profile"
+  else
+    notify-send -a "Little O" "Pictures unavailable" "Ask Dad to reinstall Little O."
+    return_home
+    return 1
+  fi
 }
 
 case "$action" in
@@ -63,6 +73,7 @@ case "$action" in
     omarchy-shell shell summon little-o.home '{}'
     ;;
   draw)
+    focus_activity_workspace
     if command -v tuxpaint >/dev/null 2>&1; then
       run_and_return tuxpaint --fullscreen --nosysfonts
     else
@@ -70,6 +81,7 @@ case "$action" in
     fi
     ;;
   letters|numbers)
+    focus_activity_workspace
     if command -v gcompris-qt >/dev/null 2>&1; then
       if [[ "$action" == "letters" ]]; then
         run_and_return gcompris-qt --launch click_on_letter --difficulty 1-2 --fullscreen --sound --disable-kioskmode
@@ -81,44 +93,34 @@ case "$action" in
     fi
     ;;
   stories)
+    focus_activity_workspace
     mkdir -p "$HOME/Books/Carl"
-    if [[ -x "$HOME/.local/share/little-o/omabook/build/omabook" ]]; then
+    if command -v omabook >/dev/null 2>&1; then
+      run_and_return omabook
+    elif [[ -x "$HOME/.local/share/little-o/omabook/build/omabook" ]]; then
+      # Compatibility path for installations made before OmaBook became a
+      # pinned submodule and installed `~/.local/bin/omabook`.
       run_and_return "$HOME/.local/share/little-o/omabook/build/omabook"
     else
-      notify-send -a "Little O" "Stories unavailable" "OmaBook needs to be rebuilt."
+      notify-send -a "Little O" "Stories unavailable" "Ask Dad to install the pinned OmaBook reader."
+      return_home
     fi
     ;;
   music)
+    focus_activity_workspace
     mkdir -p "$HOME/Music/Carl"
-    launch_playroom music
+    if [[ -f "$music_app" ]] && find "$HOME/Music/Carl" -maxdepth 1 -type f \
+      \( -iname '*.flac' -o -iname '*.m4a' -o -iname '*.mp3' -o -iname '*.oga' \
+      -o -iname '*.ogg' -o -iname '*.opus' -o -iname '*.wav' \) -print -quit | grep -q .; then
+      run_and_return python3 "$music_app" "$HOME/Music/Carl" \
+        --profile "$HOME/.local/share/little-o/music-profile"
+    else
+      launch_playroom music
+    fi
     ;;
   my-things)
-    mkdir -p "$HOME/Pictures/Carl"
-    run_and_return nautilus --new-window "$HOME/Pictures/Carl"
-    ;;
-  helper)
-    hermes_app="$HOME/.hermes/hermes-agent/apps/desktop/release/linux-unpacked/Hermes"
-    if [[ -x "$hermes_app" ]]; then
-      cd "$HOME"
-      # The locally built Electron sandbox helper needs a one-time root-owned
-      # permission fix. Keep the child-facing button usable until Dad applies it.
-      if [[ -u "$HOME/.hermes/hermes-agent/apps/desktop/release/linux-unpacked/chrome-sandbox" ]]; then
-        uwsm-app -- "$hermes_app" --ozone-platform=wayland >/dev/null 2>&1 &
-      else
-        uwsm-app -- "$hermes_app" --no-sandbox --ozone-platform=wayland >/dev/null 2>&1 &
-      fi
-      focus_hermes_and_start_voice || true
-      # Preserve the appliance-like flow: when Hermes closes, return to Home.
-      while hermes_window_present; do sleep 1; done
-      return_home
-    elif command -v hermes >/dev/null 2>&1; then
-      hermes desktop --cwd "$HOME" >/dev/null 2>&1 &
-      focus_hermes_and_start_voice || true
-      while hermes_window_present; do sleep 1; done
-      return_home
-    else
-      notify-send -a "Little O" "Helper unavailable" "Hermes is not available yet."
-    fi
+    focus_activity_workspace
+    launch_gallery
     ;;
   volume)
     omarchy-shell shell toggle omarchy.audio '{}'
@@ -128,6 +130,7 @@ case "$action" in
     ;;
   *)
     notify-send -a "Little O" "Unknown activity" "$action"
+    return_home
     exit 2
     ;;
 esac

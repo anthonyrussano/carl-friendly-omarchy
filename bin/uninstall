@@ -3,10 +3,12 @@ set -euo pipefail
 
 stamp="$(date +%Y%m%d-%H%M%S)"
 archive="$HOME/.local/state/little-o/removed/$stamp"
+baseline="$HOME/.local/state/little-o/baseline"
 mkdir -p "$archive"
 
 if [[ "$(omarchy theme current 2>/dev/null || true)" == "Little O" ]]; then
-  omarchy theme set "Tokyo Night"
+  restore_theme="$(head -n1 "$baseline/theme.txt" 2>/dev/null || true)"
+  omarchy theme set "${restore_theme:-Tokyo Night}"
 fi
 
 for path in \
@@ -14,17 +16,22 @@ for path in \
   "$HOME/.config/omarchy/themes/little-o" \
   "$HOME/.config/omarchy/hooks/post-boot.d/little-o-home" \
   "$HOME/.local/bin/little-o-launch" \
-  "$HOME/.local/share/little-o/little-o-playroom.html"; do
+  "$HOME/.local/share/little-o/little-o-playroom.html" \
+  "$HOME/.local/share/little-o/little-o-gallery.py" \
+  "$HOME/.local/share/little-o/little-o-music.py"; do
   [[ -e "$path" ]] && mv "$path" "$archive/"
 done
 
-latest_shell="$(find "$HOME/.local/state/little-o/backups" -type f -name shell.json -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2-)"
-if [[ -n "$latest_shell" ]]; then
-  cp "$latest_shell" "$HOME/.config/omarchy/shell.json"
+if [[ -f "$baseline/shell.json" ]]; then
+  cp "$baseline/shell.json" "$HOME/.config/omarchy/shell.json"
+elif [[ -f "$baseline/shell.json.absent" ]]; then
+  rm -f "$HOME/.config/omarchy/shell.json"
+elif [[ -f "$HOME/.config/omarchy/shell.json.bak.little-o-20260830" ]]; then
+  cp "$HOME/.config/omarchy/shell.json.bak.little-o-20260830" "$HOME/.config/omarchy/shell.json"
 else
-  printf 'No installer-created shell backup was found; shell.json was left unchanged.\n' >&2
+  printf 'No first-install shell baseline was found; shell.json was left unchanged.\n' >&2
 fi
 
 omarchy restart shell
 printf 'Little O files moved to %s (recoverable).\n' "$archive"
-printf 'Books, music, pictures, OmaBook data, and Hermes data were preserved.\n'
+printf 'Books, music, pictures, and OmaBook data were preserved.\n'

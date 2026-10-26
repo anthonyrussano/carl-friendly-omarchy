@@ -2,17 +2,17 @@
 
 ## Daily use
 
-The Home icon in the top bar summons Carl's activity screen. Closing an activity returns there automatically. **Grown-ups** opens the stock Omarchy menu.
+The Home icon in the left bar summons Carl's activity screen. Closing an activity returns there automatically. Hold **Hold for grown-ups** for 1.8 seconds to open the stock Omarchy menu; Escape remains the documented emergency keyboard path.
 
-**Talk to Helper** now opens/focuses Hermes and starts voice chat automatically. Say “stop” to end a voice conversation. `Ctrl+B` remains the manual start/stop shortcut.
+The speaker icon opens Omarchy's audio panel. Choose an item under **Input** to change microphones; `wpctl status` shows the selected source with `*`. The Little O home intentionally uses the Wayland `Top` layer so the audio overlay receives all clicks while open.
 
-The top-right speaker opens Omarchy's audio panel. Choose an item under **Input** to change microphones; `wpctl status` shows the selected source with `*`. The Little O home intentionally uses the Wayland `Top` layer so the audio overlay receives all clicks while open.
+There is no AI helper in child mode. The previous Hermes prototype was retired after supervised use found it too slow and unreliable.
 
 ## Add content
 
 - Copy DRM-free EPUB/PDF/MOBI/AZW3 files to `~/Books/Carl`, open **Stories**, choose Import, and select that folder. Re-importing is safe and does not duplicate unchanged books.
-- Copy audio files to `~/Music/Carl`. In **Music**, choose **Choose Songs** and select the desired files.
-- Saved drawings and Carl's files belong in `~/Pictures/Carl`.
+- Copy supported audio files to `~/Music/Carl`; **Music** scans that folder automatically.
+- Saved drawings and pictures belong in `~/Pictures/Carl`; **My Things** shows them without rename, move, or delete controls.
 
 ## Health check
 
@@ -21,29 +21,28 @@ cd ~/Projects/carl-friendly-omarchy
 bin/doctor
 ```
 
-The diagnostic does not print API keys. It checks local components, the active microphone, and summarizes Hermes's provider check without revealing the credential.
+The diagnostic checks the deployed source, pinned offline reader, starter media, local activities, content folders, and active audio/theme state.
 
-## Credential and system completion
+Before deploying source changes, run the non-mutating checks:
+
+```bash
+bin/test
+bin/install --dry-run
+```
+
+## System completion
 
 ```bash
 cd ~/Projects/carl-friendly-omarchy
 bin/finish-system-setup
-hermes auth add xai-oauth
+bin/install-omabook
 ```
 
-The first command needs Anthony's administrator password. The second starts xAI's device OAuth flow. Do not put either password or token in this repository.
-
-After xAI passes `hermes doctor`, inactive Anthropic credentials can be removed individually if they are no longer wanted:
-
-```bash
-hermes auth list
-hermes auth remove anthropic 1
-hermes doctor
-```
+The first command needs Anthony's administrator password to install host packages. The second tests and locally installs the exact OmaBook release pinned by the main repository; it needs no model, account, or credential.
 
 ## Update
 
-Run `bin/update-omabook` only when ready to test upstream changes; the AI branch is experimental. Then run its upstream tests and `bin/doctor`. Little O itself can be redeployed repeatably with `bin/install`.
+`bin/update-omabook` intentionally reinstalls the current submodule pin. To adopt a later release, update `vendor/omabook` in a dedicated review, run its tests, verify that the selected branch is still non-AI/offline, commit the new gitlink in this repository, then run `bin/install-omabook` and `bin/doctor`. Little O itself can be redeployed repeatably with `bin/install`.
 
 ## Recovery
 
@@ -61,4 +60,4 @@ cd ~/Projects/carl-friendly-omarchy
 bin/uninstall
 ```
 
-The uninstaller moves installed files into `~/.local/state/little-o/removed/` and preserves books, music, pictures, OmaBook data, and Hermes data.
+The uninstaller moves installed shell files into `~/.local/state/little-o/removed/` and preserves books, music, pictures, and OmaBook data.

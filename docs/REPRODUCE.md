@@ -4,23 +4,25 @@ This guide recreates the reference implementation without copying personal data 
 
 ## Baseline and requirements
 
-- Omarchy 4.0.1 or a compatible release with Omarchy Shell/Quickshell and Hyprland
-- Arch packages/applications: Chromium, Nautilus, GCompris Qt, `speech-dispatcher`, PipeWire/WirePlumber, `wtype`, `jq`, Git, Make, a C/C++ toolchain, Qt 6 development/runtime libraries, and Node/npm for the Hermes desktop build
-- Rough reference hardware: x86-64 Intel i3, 8 GiB RAM, integrated graphics. Allow swap and use Faster Whisper `tiny` on low-end hardware.
-- Network access during installation for packages, source checkouts, model download, Edge TTS, and the configured AI provider
-- An xAI account authorized through Hermes's device OAuth flow. Never commit credentials.
+- Omarchy 4.0.6 or a compatible release with Omarchy Shell/Quickshell and Hyprland
+- Arch packages/applications: Chromium, Python 3, GCompris Qt, PipeWire/WirePlumber, `jq`, Git, Make, a C/C++ toolchain, and the Qt 6/poppler libraries listed by `bin/finish-system-setup`
+- Rough reference hardware: x86-64 Intel i3, 8 GiB RAM, integrated graphics.
+- Network access during initial package installation and repository/submodule checkout; child activities and the reader work offline afterward.
 
 ## 1. Install the project shell
 
-Clone/copy this repository to `~/Projects/carl-friendly-omarchy`, then run:
+Clone this repository and its pinned reader submodule, then run:
 
 ```bash
+git clone --recurse-submodules <repository-url> ~/Projects/carl-friendly-omarchy
 cd ~/Projects/carl-friendly-omarchy
-bin/install
+bin/install --dry-run
 bin/finish-system-setup
+bin/install
+bin/install-omabook
 ```
 
-The installer backs up targeted user configuration under `~/.local/state/little-o/backups/`, installs the user-owned theme and plugin, configures the small child bar, and registers the login hook. It never edits `/usr/share/omarchy`.
+The installer backs up targeted user configuration under `~/.local/state/little-o/backups/`, installs the user-owned theme and plugin, seeds missing starter content, configures the small child bar, and registers the login hook. It never edits `/usr/share/omarchy`.
 
 ## 2. Install educational applications and content
 
@@ -30,59 +32,36 @@ Install GCompris (`gcompris-qt`) and place child-owned content in:
 - `~/Music/Carl` for audio
 - `~/Pictures/Carl` for drawings and files
 
-Letters uses GCompris `click_on_letter`; Numbers uses `learn_digits`, both at difficulty 1–2. Draw and Music are bundled local Chromium activities.
+Letters uses GCompris `click_on_letter`; Numbers uses `learn_digits`, both at difficulty 1–2. Draw is a bundled local activity. Music and My Things use Python standard-library servers bound to localhost, with Chromium providing the large child interface; each server is restricted to its approved media folder.
 
-For Stories, clone `https://github.com/newx/omabook` branch `main-with-ai-features` into `~/.local/share/little-o/omabook`, initialize/build its `foliate-js` dependency, then build OmaBook according to upstream instructions. The reviewed reference revisions are recorded in `docs/DEPENDENCIES.md`; `bin/update-omabook` performs the project's explicit update/build workflow.
+For Stories, `bin/install-omabook` verifies, tests, builds, and locally installs the submodule's tagged non-AI `v0.1.1` release. Its foliate-js engine is already vendored at the revision recorded in `docs/DEPENDENCIES.md`.
 
-## 3. Install and configure Hermes
+## 3. Starter and family content
 
-Install Hermes Agent separately so `hermes` is on `PATH`, build/install its desktop application, then configure:
+`bin/install` copies the repository's three CC0 books, three songs, and three pictures only when same-named files are absent. Re-running it never overwrites family content. Add more approved files directly to the three content folders; OmaBook requires the adult to import new book folders from its library screen.
 
-```text
-model.provider = xai-oauth
-model.default = grok-4.6
-stt.enabled = true
-stt.provider = local
-stt.model = tiny
-stt.language = en
-tts.provider = edge
-tts.voice = en-US-AriaNeural
-voice.record_key = ctrl+b
-voice.submit_mode = direct
-voice.auto_tts = true
-voice.client_direct = true
-```
-
-Install `faster-whisper` and `sounddevice` in Hermes's own virtual environment and let it download/warm the `tiny` model. Authenticate interactively:
-
-```bash
-hermes auth add xai-oauth
-hermes doctor
-```
-
-Confirm that `hermes doctor` reports xAI OAuth logged in. Authentication failures are independent of microphone, STT, and TTS health.
-
-Run `bin/finish-system-setup` after the desktop build so Electron's `chrome-sandbox` is owned by root with mode 4755. The launcher uses a compatibility fallback until that is true.
+No Hermes installation or AI/model credential is required. The retired experiment is documented under `research/hermes-prototype/` and is not installed.
 
 ## 4. Verify
 
 ```bash
 cd ~/Projects/carl-friendly-omarchy
 bin/install
+bin/test
 bin/doctor
 ```
 
 Then perform a supervised manual pass:
 
 1. Open the speaker panel, select each input, and verify the chosen source has `*` in `wpctl status`. Confirm no click reaches the home tiles behind the panel.
-2. Select **Talk to Helper**. Hermes should open/focus and voice conversation should start without another click.
-3. Speak a short phrase and confirm transcription, a Grok response, and spoken output.
-4. Launch and close all six activities; Home should return after each closes.
+2. Launch and close all six activities; each should use workspace 10 and Home should return after it closes.
+3. Confirm Music and My Things show the seeded starter media without allowing arbitrary file-system access.
+4. Import `~/Books/Carl` in Stories, open a starter EPUB, turn pages, and return to the library.
 5. Restart the session and confirm the child Home appears from the post-boot hook.
 
 ## 5. Update, recover, or share
 
 - Redeploy safely with `bin/install`; each run creates a timestamped backup.
-- Update OmaBook explicitly with `bin/update-omabook`, rerun upstream tests, then `bin/doctor`.
-- Recover with `bin/uninstall`; personal content, Hermes data, and OmaBook data are preserved.
+- Reinstall the repository-pinned OmaBook release with `bin/update-omabook`; changing the pin requires a reviewed main-repository commit.
+- Recover with `bin/uninstall`; personal content and OmaBook data are preserved.
 - Before publishing, exclude credentials, conversations, models, browser profiles, personal media, and child observations. Share source, reviewed dependency revisions, screenshots without personal data, test results, and reproducible issue reports.

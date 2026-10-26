@@ -1,0 +1,3 @@
+[submodule "vendor/omabook"]
+	path = vendor/omabook
+	url = https://github.com/newx/omabook.git
